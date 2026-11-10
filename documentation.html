@@ -1,0 +1,25 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka ? documentation</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>Maintenir la documentation</h1>
+<p>L adresse de publication de la documentation publique est <a href="https://eliezermasial.github.io/mboka-services-docs/">https://eliezermasial.github.io/mboka-services-docs/</a> . Le code du backend reste dans son depot prive. Le depot public mboka-services-docs ne recoit que les fichiers statiques generes.</p>
+<h2>Generer en local</h2>
+<pre><code class="language-sh">composer install
+php scripts/build-docs.php
+php -S 127.0.0.1:8090 -t build/docs
+</code></pre>
+<p>Ouvrir <a href="http://127.0.0.1:8090">http://127.0.0.1:8090</a> . La reference Scramble directe est aussi disponible dans l environnement local sur <a href="http://127.0.0.1:8000/docs/api">http://127.0.0.1:8000/docs/api</a> .</p>
+<p>Le script genere la specification OpenAPI depuis les routes, Form Requests et Resources ; complete les reponses communes et les limites ; verifie que toutes les operations API sont presentes ; puis construit les pages HTML des guides. Le resultat est dans build/docs, ignore par Git.</p>
+<h2>A chaque fonctionnalite</h2>
+<ol>
+<li>Mettre a jour les routes, validations, types PHP et PHPDoc des Resources.</li>
+<li>Completer les descriptions metier et exemples utiles dans les guides Markdown.</li>
+<li>Executer les tests et <code>php scripts/build-docs.php</code>.</li>
+<li>Commit et push sur develop.</li>
+</ol>
+<p>GitHub Actions relance les tests sur une base PostgreSQL/PostGIS ephemere, genere la documentation puis publie le site. Les pull requests sont verifiees sans publication. Un echec de tests ou de generation empeche la mise a jour du site ; la derniere version publiee reste disponible.</p>
+<h2>Configurer l adresse du backend</h2>
+<p>DOCS_API_URL definit l URL complete de base de l API dans la specification. Par defaut : <a href="http://127.0.0.1:8000/api/mboka-services/v1">http://127.0.0.1:8000/api/mboka-services/v1</a> . La variable GitHub Actions du meme nom permet de pointer plus tard vers une API de developpement publique en HTTPS, sans modifier le code.</p>
+<p>La documentation en ligne ne rend pas localhost accessible aux autres personnes. Les navigateurs peuvent bloquer les appels depuis une page HTTPS vers un serveur HTTP local. Pour tester aujourd hui, importer openapi.json dans Postman ou utiliser la documentation locale /docs/api. Pour un backend distant, configurer les origines CORS autorisees et utiliser HTTPS.</p>
+<h2>Publication et acces</h2>
+<p>Le workflow utilise une cle SSH de deploiement autorisee uniquement sur le depot public de documentation. Sa partie privee est un secret GitHub Actions du backend, DOCS_DEPLOY_KEY. Elle n apparait ni dans le depot public ni dans les artefacts du site. Le secret est reserve aux publications depuis develop, jamais aux pull requests.</p>
+<p>Les seuls fichiers publies sont ceux de build/docs : pages, CSS, OpenAPI et metadonnees de generation. Le .env, les identifiants, les fichiers .local, les donnees PostgreSQL et le code PHP ne sont pas publies. Les guides sont publics : ne pas y ajouter de secrets ni de donnees de clients.</p>
+<p>Scramble signale actuellement JR001 sur 9 Resources enveloppant des tableaux de resultats plutot qu un modele Eloquent. Ces avertissements sont non bloquants ; les Resources de modeles sont annotees et les schemas critiques sont verifies par les tests. Le build controle aussi les references OpenAPI et les identifiants d operations.</p>
+</main></body></html>

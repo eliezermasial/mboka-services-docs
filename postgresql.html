@@ -1,0 +1,48 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka ? postgresql</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>PostgreSQL et PostGIS sans Docker</h1>
+<h2>Installation locale en place</h2>
+<p>Mboka dispose d'une copie native independante de PostgreSQL 18.6 et PostGIS 3.6.2 dans <code>.local/postgresql18</code>. Ces binaires ont ete copies depuis la distribution deja presente sur ce PC, avec sa licence. Aucune connexion ni modification n'a ete faite sur la base de l'autre logiciel.</p>
+<ul>
+<li>Adresse : <code>127.0.0.1:5433</code> (le port 5432 est occupe par une autre application).</li>
+<li>Base de developpement : <code>mboka_services</code>.</li>
+<li>Base de tests : <code>mboka_services_test</code>.</li>
+<li>Utilisateur Laravel : <code>mboka_app</code>, sans droits superutilisateur ni creation de bases ou de roles.</li>
+<li>Les identifiants Laravel sont dans <code>.env</code>. Ceux de l'administrateur local sont proteges avec Windows DPAPI dans <code>.local/postgres-admin.xml</code>, pour le compte Windows qui a initialise l'instance.</li>
+<li>Donnees : <code>.local/pgdata</code>. Journal : <code>.local/postgresql.log</code>.</li>
+<li>Parametres locaux : shared_buffers=32MB, max_connections=30, fuseau Africa/Kinshasa.</li>
+</ul>
+<p>Depuis le dossier du projet, dans PowerShell :</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/postgres.ps1 start
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/postgres.ps1 status
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/postgres.ps1 stop
+</code></pre>
+<p>La base ne demarre pas automatiquement avec Windows : utiliser <code>start</code> avant Laravel et <code>stop</code> pour liberer la memoire. Ne pas deplacer ou supprimer <code>.local</code> pendant son fonctionnement. <code>.local</code> est ignore par Git et contient des donnees privees : ce n'est pas un dossier temporaire a nettoyer.</p>
+<p>Les migrations et les seeders ont ete executes sur la nouvelle base locale. La base MySQL n'a pas ete effacee ni transferee. Une copie de l'ancien <code>.env</code> est conservee dans <code>.local/mysql.env.backup</code>.</p>
+<pre><code class="language-sh">php artisan migrate
+php vendor/phpunit/phpunit/phpunit --do-not-cache-result
+</code></pre>
+<p>PHP doit charger pdo_pgsql, en CLI et dans le serveur HTTP. Les tests utilisent PostgreSQL et la base dediee mboka_services_test, dont les tables applicatives sont recreees par RefreshDatabase. Ne jamais donner le nom de la base de developpement ou de production a cette configuration de tests.</p>
+<h2>Installation sur un autre PC ou serveur</h2>
+<p>Installer PostgreSQL 18 et un bundle PostGIS 3.6 compatible via les distributions officielles. Sur Windows, Stack Builder permet d'ajouter PostGIS. Ne pas recopier des binaires Windows sur Linux.</p>
+<p>Dans psql, avec un compte administrateur :</p>
+<pre><code class="language-sql">CREATE ROLE mboka_app LOGIN;
+-- Definir le mot de passe sans l'inscrire dans l'historique SQL :
+\password mboka_app
+CREATE DATABASE mboka_services OWNER mboka_app;
+\connect mboka_services
+CREATE EXTENSION IF NOT EXISTS postgis;
+SELECT PostGIS_Full_Version();
+</code></pre>
+<p>Pour une machine de tests, creer aussi mboka_services_test avec le meme proprietaire et y activer PostGIS en administrateur.</p>
+<p>Configurer DB_CONNECTION=pgsql, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME et DB_PASSWORD dans .env. DB_URL doit rester vide si les parametres individuels sont utilises. Puis :</p>
+<pre><code class="language-sh">php artisan config:clear
+php artisan migrate
+</code></pre>
+<p>Sur une nouvelle base locale uniquement, <code>php artisan db:seed</code> initialise les donnees de reference et un administrateur de demonstration avec des identifiants publics. Ne pas executer ce seeder tel quel en production.</p>
+<p>Changer la connexion ne transfere pas les donnees MySQL. Conserver l'ancienne base et organiser un transfert si necessaire. Ne pas utiliser migrate:fresh sur une base contenant des donnees a conserver.</p>
+<h2>Production</h2>
+<p>Activer PostGIS avant les migrations, avec un compte autorise. Conserver les memes versions majeures PostgreSQL/PostGIS que localement, avec les correctifs appropries. Utiliser une distribution officielle maintenue ou un service gere compatible PostGIS.</p>
+<p>Ne pas donner de droits superutilisateur au compte Laravel. Configurer les secrets hors du depot, les sauvegardes et la connexion TLS selon l'hebergeur (DB_SSLMODE, certificats si requis). Executer <code>php artisan migrate --force</code> lors du deploiement. Les fichiers .local et les identifiants locaux ne sont pas des artefacts de deploiement.</p>
+<h2>Etape spatiale suivante</h2>
+<p>Les colonnes latitude et longitude existent deja. PostGIS est active et un test verifie une recherche de proximite en metres. L'ajout d'un point geography(Point,4326), d'un index GiST et d'une route de recherche par distance reste une evolution distincte.</p>
+<p>Sources : <a href="https://www.postgresql.org/download/windows/">PostgreSQL Windows</a>, <a href="https://postgis.net/documentation/getting_started/install_windows/released_versions/">PostGIS Windows</a>, <a href="https://postgis.net/documentation/getting_started/">activation PostGIS</a>.</p>
+</main></body></html>

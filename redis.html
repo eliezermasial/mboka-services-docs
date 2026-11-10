@@ -1,0 +1,52 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka ? redis</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>Redis optionnel</h1>
+<p>Redis n'est pas necessaire pour lancer Mboka. Par defaut, le cache, les sessions configurees et les compteurs de connexion utilisent PostgreSQL. Les tokens Sanctum restent toujours dans PostgreSQL.</p>
+<p>Le client PHP <code>predis/predis</code> est fourni par Composer : aucune extension PHP Redis n'est necessaire, y compris sur Windows. Aucun serveur Redis et aucun Horizon ne sont installes par ce changement.</p>
+<h2>Sans Redis (configuration locale actuelle)</h2>
+<pre><code class="language-dotenv">CACHE_STORE=database
+CACHE_LIMITER=database
+SESSION_DRIVER=database
+QUEUE_CONNECTION=database
+</code></pre>
+<h2>Activer Redis pour les compteurs de connexion seulement</h2>
+<p>Une fois un serveur Redis accessible :</p>
+<pre><code class="language-dotenv">REDIS_CLIENT=predis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_USERNAME=null
+REDIS_PASSWORD=null
+REDIS_CACHE_DB=1
+CACHE_LIMITER=redis
+</code></pre>
+<p>Le cache general et les sessions peuvent rester dans PostgreSQL. Les memes regles de limitation s'appliquent dans les deux modes.</p>
+<h2>Activer aussi le cache et le stockage des sessions</h2>
+<pre><code class="language-dotenv">CACHE_STORE=redis
+CACHE_LIMITER=redis
+SESSION_DRIVER=redis
+REDIS_SESSION_DB=2
+</code></pre>
+<p>Quand SESSION_DRIVER=redis, la connexion nommee <code>sessions</code> est selectionnee automatiquement. Les sessions utilisent une base Redis distincte du cache (2 contre 1), afin qu'un vidage du cache ne supprime pas les sessions. SESSION_CONNECTION peut remplacer ce choix explicitement.</p>
+<p>Si l'hebergeur fournit des URL, utiliser REDIS_URL pour le cache/les queues et REDIS_SESSION_URL pour les sessions, avec la base correcte dans chaque URL. Une base specifiee dans l'URL peut remplacer REDIS_CACHE_DB ou REDIS_SESSION_DB. En production, utiliser les identifiants et les exigences TLS du fournisseur.</p>
+<p>Le changement de stockage de session ne transfere pas les sessions existantes : une reconnexion peut etre necessaire. Changer SESSION_DRIVER ne met pas en place l'authentification SPA par cookies : les routes actuelles de connexion emettent toujours des tokens Sanctum. Ce mode web devra etre configure separement avec CSRF et les domaines autorises.</p>
+<p>Apres toute modification du .env :</p>
+<pre><code class="language-sh">php artisan config:clear
+</code></pre>
+<p>En production, reconstruire ensuite le cache de configuration et redemarrer les processus persistants concernes. Pour verifier Redis, ouvrir <code>php artisan tinker</code>, puis executer :</p>
+<pre><code class="language-php">Illuminate\Support\Facades\Redis::connection('cache')-&gt;ping();
+Illuminate\Support\Facades\Redis::connection('sessions')-&gt;ping();
+</code></pre>
+<p>Redis est optionnel par choix de configuration, sans basculement automatique en cas de panne. Si Redis est selectionne puis devient indisponible, les requetes API touchees par une erreur de connexion Predis retournent 503. Les compteurs ne sont pas recrees silencieusement dans PostgreSQL. Pour revenir a PostgreSQL, reconfigurer explicitement les stockages puis vider le cache de configuration ; les sessions/compteurs Redis ne sont pas transferes.</p>
+<h2>Limitation de connexion</h2>
+<p>POST /api/mboka-services/v1/auth/login utilise le limiteur Laravel <code>login</code> :</p>
+<ul>
+<li>3 echecs dans une fenetre de 15 minutes pour un meme numero normalise et une meme IP ;</li>
+<li>30 requetes par minute pour une meme IP, tous numeros confondus.</li>
+</ul>
+<p>Ces seuils sont configurables via LOGIN_MAX_ATTEMPTS=3, LOGIN_DECAY_MINUTES=15 et LOGIN_IP_RATE_LIMIT_PER_MINUTE=30. La limite numero + IP compte les echecs HTTP 422 (identifiants invalides et erreurs de validation). Les connexions reussies ne consomment pas les essais et ne remettent pas les echecs precedents a zero. La fenetre de 15 minutes commence au premier echec ; apres 3 echecs, les requetes suivantes sont bloquees jusqu a son expiration. La limite globale par IP compte toutes les requetes. Le meme endpoint protege le mobile et le web, quel que soit le User-Agent. Le format local avec country_id et son equivalent international partagent la meme limite. Les cles des compteurs ne contiennent pas le numero en clair.</p>
+<p>Une limite depassee retourne HTTP 429, success=false, un message localise (fr/en/ln), retry_after en secondes et l'en-tete Retry-After. La limite expire automatiquement apres sa fenetre.</p>
+<p>Derriere un reverse proxy en production, configurer uniquement les proxies de confiance pour que l'IP utilisee soit celle du client. Ne pas faire confiance aux en-tetes IP provenant directement d'Internet.</p>
+<h2>Tests</h2>
+<p>La suite standard ne necessite pas Redis. Elle utilise une base PostgreSQL de test dediee et un cache en memoire pour l'isolation, avec un test specifique des compteurs PostgreSQL et un test de panne Redis simulee. La selection du client Predis et la separation cache/sessions sont egalement verifiees sans serveur Redis.</p>
+<pre><code class="language-sh">php vendor/phpunit/phpunit/phpunit --do-not-cache-result
+</code></pre>
+<p>Horizon reste une evolution ulterieure. Les queues conservent leur stockage PostgreSQL par defaut.</p>
+</main></body></html>

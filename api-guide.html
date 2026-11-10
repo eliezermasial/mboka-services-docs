@@ -1,0 +1,82 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka ? api-guide</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>Utiliser l API Mboka Services</h1>
+<p>L API connecte clients et prestataires locaux. Son prefixe est <code>/api/mboka-services/v1</code>.</p>
+<h2>Faire une premiere requete</h2>
+<p>Demarrer PostgreSQL puis Laravel depuis le dossier du projet :</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/postgres.ps1 start
+php artisan serve
+</code></pre>
+<p>Consulter le catalogue public :</p>
+<pre><code class="language-http">GET http://127.0.0.1:8000/api/mboka-services/v1/categories
+Accept: application/json
+X-Locale: fr
+</code></pre>
+<p>Les langues disponibles sont fr, en et ln. Le fichier <code>openapi.json</code> est importable directement dans Postman : Import &gt; fichier ou URL du fichier OpenAPI de la documentation.</p>
+<h2>Authentification mobile et web</h2>
+<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register et POST /auth/login retournent un token dans data.token. Pour les routes protegees :</p>
+<pre><code class="language-http">Authorization: Bearer VOTRE_TOKEN
+Accept: application/json
+</code></pre>
+<p>Le mot de passe d un compte est hache dans PostgreSQL. L empreinte du token est conservee dans personal_access_tokens. POST /auth/logout revoque le token courant. Redis ne remplace pas ce stockage.</p>
+<p>GET /auth/me retourne le compte connecte. Les comptes client et provider peuvent s inscrire ; les droits administrateur ne sont pas accessibles par inscription publique.</p>
+<h2>Limites de connexion</h2>
+<p>POST /auth/login autorise 3 echecs par numero normalise + IP sur une fenetre de 15 minutes qui commence au premier echec. Les connexions reussies ne consomment pas ces essais. La quatrieme tentative est refusee jusqu a expiration de la fenetre, meme avec un mot de passe correct. Il existe aussi une limite de 30 requetes/minute par IP, tous numeros confondus.</p>
+<p>En cas de blocage : HTTP 429 avec success=false, message, retry_after et en-tete Retry-After. Attendre ce delai avant de reessayer. Les memes compteurs sont utilises par le mobile et le web. PostgreSQL est le stockage par defaut ; Redis est activable par configuration.</p>
+<h2>Comprendre les modules</h2>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>countries</td>
+<td>Pays et villes de reference</td>
+</tr>
+<tr>
+<td>categories</td>
+<td>Groupes de metiers ; administration reservee aux admins</td>
+</tr>
+<tr>
+<td>services</td>
+<td>Catalogue des metiers ; approbation admin des propositions prestataires</td>
+</tr>
+<tr>
+<td>provider-services</td>
+<td>Offres des prestataires, prix et disponibilite</td>
+</tr>
+<tr>
+<td>locations</td>
+<td>Adresse du profil, pays, ville et coordonnees</td>
+</tr>
+<tr>
+<td>service-requests</td>
+<td>Demandes clients et suivi de l intervention</td>
+</tr>
+<tr>
+<td>medias</td>
+<td>Images et videos de profil, portfolio et pieces jointes</td>
+</tr>
+<tr>
+<td>notifications</td>
+<td>Notifications en base et suivi de lecture</td>
+</tr>
+</tbody>
+</table>
+<p>Service, ProviderService et ServiceRequest representent respectivement un metier, une offre commerciale et une intervention demandee.</p>
+<h2>Parcours d une intervention</h2>
+<ol>
+<li>Le client cree son compte et sa localisation.</li>
+<li>Il choisit un service approuve et cree une demande.</li>
+<li>Il peut choisir un prestataire immediatement ou l affecter plus tard.</li>
+<li>Le prestataire affecte accepte ou refuse.</li>
+<li>Une demande acceptee passe en cours puis terminee.</li>
+</ol>
+<p>Statuts : pending -&gt; accepted -&gt; in_progress -&gt; completed. Le refus donne rejected. Le client peut annuler une demande pending ou accepted, avec le statut cancelled. Les policies controlent l appartenance de la demande et les droits de chaque acteur.</p>
+<h2>Fichiers et erreurs</h2>
+<p>Pour les medias, utiliser multipart/form-data avec file, mediable_type, mediable_id et media_type. Une photo de profil doit etre une image. Les fichiers sont stockes sur le disque public ; la limite applicative actuelle est 500 Mo et depend aussi des limites PHP/serveur.</p>
+<p>Les erreurs 401 indiquent une authentification manquante ou invalide ; 403 une action interdite ; 422 une validation ou regle metier non respectee ; 429 un depassement des limites. Si Redis est configure puis inaccessible, une erreur de connexion Predis est rendue en 503.</p>
+<h2>Ce qui reste a construire</h2>
+<p>La documentation publiee ne deploie pas le backend. Les sessions SPA par cookies, la reinitialisation du mot de passe, les paiements, Horizon et la recherche geographique par distance ne sont pas encore exposes comme fonctionnalites completes. PostGIS est installe et teste ; cela ne signifie pas qu une route de recherche par rayon existe deja.</p>
+</main></body></html>
