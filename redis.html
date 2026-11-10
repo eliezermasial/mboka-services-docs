@@ -49,4 +49,12 @@ Illuminate\Support\Facades\Redis::connection('sessions')-&gt;ping();
 <pre><code class="language-sh">php vendor/phpunit/phpunit/phpunit --do-not-cache-result
 </code></pre>
 <p>Horizon reste une evolution ulterieure. Les queues conservent leur stockage PostgreSQL par defaut.</p>
+<h2>Stockage OTP optionnel</h2>
+<p>OTP_CACHE_STORE=database conserve par defaut l empreinte du code, les echeances et les compteurs dans le cache PostgreSQL. Pour utiliser Redis :</p>
+<pre><code class="language-dotenv">OTP_CACHE_STORE=otp
+REDIS_OTP_DB=3
+# REDIS_OTP_URL=redis://127.0.0.1:6379/3
+</code></pre>
+<p>Le store otp utilise une connexion Redis dediee, distincte du cache et des sessions. Ne pas reutiliser leurs bases si un vidage du cache ne doit pas invalider les codes. Aucun basculement automatique en cas de panne. Les routes de verification et de renvoi utilisent les memes regles, sur mobile comme sur web.</p>
+<p>Les operations OTP sont serialisees par verrou de ligne PostgreSQL sur le compte : les compteurs ne peuvent pas etre remis a zero par deux renvois concurrents, et une validation ne peut pas creer deux tokens pour le meme code. Le compte, son etat de verification et les tokens Sanctum restent dans PostgreSQL.</p>
 </main></body></html>

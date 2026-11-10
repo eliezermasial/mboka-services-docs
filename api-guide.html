@@ -12,12 +12,30 @@ X-Locale: fr
 </code></pre>
 <p>Les langues disponibles sont fr, en et ln. Le fichier <code>openapi.json</code> est importable directement dans Postman : Import &gt; fichier ou URL du fichier OpenAPI de la documentation.</p>
 <h2>Authentification mobile et web</h2>
-<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register et POST /auth/login retournent un token dans data.token. Pour les routes protegees :</p>
+<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register cree un compte en attente et retourne HTTP 202 avec data.verification_id, expires_in et resend_after, sans token. POST /auth/otp/verify confirme le numero et retourne un token dans data.token. Les connexions suivantes par POST /auth/login utilisent telephone + mot de passe et retournent un token si le numero est deja verifie. Pour les routes protegees :</p>
 <pre><code class="language-http">Authorization: Bearer VOTRE_TOKEN
 Accept: application/json
 </code></pre>
 <p>Le mot de passe d un compte est hache dans PostgreSQL. L empreinte du token est conservee dans personal_access_tokens. POST /auth/logout revoque le token courant. Redis ne remplace pas ce stockage.</p>
 <p>GET /auth/me retourne le compte connecte. Les comptes client et provider peuvent s inscrire ; les droits administrateur ne sont pas accessibles par inscription publique.</p>
+<h2>Verifier son telephone par OTP</h2>
+<ol>
+<li>Appeler POST /auth/register avec les champs habituels du compte.</li>
+<li>Conserver data.verification_id de la reponse HTTP 202.</li>
+<li>Recevoir le SMS, puis envoyer les donnees suivantes :</li>
+</ol>
+<pre><code class="language-http">POST /api/mboka-services/v1/auth/otp/verify
+Content-Type: application/json
+</code></pre>
+<pre><code class="language-json">{
+  &quot;verification_id&quot;: &quot;UUID_RECU_A_L_INSCRIPTION&quot;,
+  &quot;code&quot;: &quot;123456&quot;
+}
+</code></pre>
+<p>Le code doit etre une chaine de 6 chiffres. Il expire apres 5 minutes. Apres 3 codes incorrects, verification et renvoi sont bloques pendant 15 minutes. Le code est consomme une seule fois ; le succes renseigne phone_verified_at et retourne un token Sanctum. Les anciens tokens du compte sont revoques.</p>
+<p>Pour renvoyer, appeler POST /auth/otp/resend avec verification_id, apres 60 secondes. Maximum 3 envois par numero sur 15 minutes et 10 demandes par IP sur 15 minutes, inscription et renvoi cumules. Le renvoi invalide l ancien code, sans remettre les echecs a zero. Un echec Infobip consomme aussi un essai d envoi pour eviter les boucles de facturation.</p>
+<p>Les comptes deja presents restent non verifies apres migration. Avec le bon mot de passe, POST /auth/login retourne HTTP 403, error_code=phone_verification_required et data.verification_id pour reprendre le parcours. Aucun token n est delivre avant verification. Les anciens tokens ne donnent pas acces aux routes metier protegees tant que le numero n est pas verifie ; logout reste possible.</p>
+<p>Si l envoi echoue, HTTP 503 retourne verification_id lorsque le compte a ete cree. Le compte n est pas supprime : reprendre avec resend apres le delai indique. Un code perdu ou expire exige un renvoi.</p>
 <h2>Limites de connexion</h2>
 <p>POST /auth/login autorise 3 echecs par numero normalise + IP sur une fenetre de 15 minutes qui commence au premier echec. Les connexions reussies ne consomment pas ces essais. La quatrieme tentative est refusee jusqu a expiration de la fenetre, meme avec un mot de passe correct. Il existe aussi une limite de 30 requetes/minute par IP, tous numeros confondus.</p>
 <p>En cas de blocage : HTTP 429 avec success=false, message, retry_after et en-tete Retry-After. Attendre ce delai avant de reessayer. Les memes compteurs sont utilises par le mobile et le web. PostgreSQL est le stockage par defaut ; Redis est activable par configuration.</p>
@@ -79,4 +97,15 @@ Accept: application/json
 <p>Les erreurs 401 indiquent une authentification manquante ou invalide ; 403 une action interdite ; 422 une validation ou regle metier non respectee ; 429 un depassement des limites. Si Redis est configure puis inaccessible, une erreur de connexion Predis est rendue en 503.</p>
 <h2>Ce qui reste a construire</h2>
 <p>La documentation publiee ne deploie pas le backend. Les sessions SPA par cookies, la reinitialisation du mot de passe, les paiements, Horizon et la recherche geographique par distance ne sont pas encore exposes comme fonctionnalites completes. PostGIS est installe et teste ; cela ne signifie pas qu une route de recherche par rayon existe deja.</p>
+<h2>Configurer Infobip et tester sans SMS reel</h2>
+<p>Par defaut, SMS_DRIVER=fake ne contacte aucun prestataire. En local, le dernier SMS de chaque verification est ecrit dans <code>.local/sms-outbox/&lt;verification_id&gt;.json</code>. Lire ce fichier prive pour recuperer le code, puis tester verify dans Postman. Ce dossier est ignore par Git. Les tests automatises capturent les messages en memoire. Le mode fake est refuse en production.</p>
+<p>Pour activer de vrais SMS, renseigner uniquement dans le .env prive :</p>
+<pre><code class="language-dotenv">SMS_DRIVER=infobip
+INFOBIP_BASE_URL=https://VOTRE_COMPTE.api.infobip.com
+INFOBIP_API_KEY=VOTRE_CLE_PRIVEE
+INFOBIP_SENDER=VOTRE_EXPEDITEUR_AUTORISE
+</code></pre>
+<p>Puis executer <code>php artisan config:clear</code>. Le compte Infobip doit autoriser les SMS et l expediteur choisi. La cle reste cote Laravel. L API utilise /sms/3/messages avec Authorization: App, et distingue un message accepte d une livraison effectivement recue. Un compte d essai peut limiter les destinataires aux numeros verifies chez Infobip.</p>
+<p>Les codes ne sont jamais retournes dans les reponses API ni ecrits dans les journaux applicatifs. Seul le mode simule local possede une boite SMS privee contenant le texte du message. Ne pas utiliser cette simulation en production.</p>
+<p>Les identifiants d acces sont la seule partie manquante pour l envoi reel ; les tests Infobip utilisent des reponses HTTP simulees et n envoient aucun SMS.</p>
 </main></body></html>
