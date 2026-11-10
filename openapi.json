@@ -288,7 +288,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Logout successful."
+                                            "const": "Deconnexion reussie."
                                         }
                                     },
                                     "required": [
@@ -2097,7 +2097,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Operation completed successfully."
+                                            "const": "Operation reussie."
                                         },
                                         "unread_count": {
                                             "type": "integer",
@@ -2304,7 +2304,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "const": "Operation completed successfully."
+                                            "const": "Operation reussie."
                                         },
                                         "unread_count": {
                                             "type": "integer",
@@ -4569,7 +4569,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -4693,7 +4693,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -4803,7 +4803,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -5010,7 +5010,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -5166,7 +5166,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -5275,7 +5275,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -5484,7 +5484,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
@@ -5516,7 +5516,7 @@
                     },
                     "message": {
                         "type": "string",
-                        "const": "Operation completed successfully."
+                        "const": "Operation reussie."
                     },
                     "data": {
                         "type": "object",
