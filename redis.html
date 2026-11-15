@@ -1,8 +1,9 @@
 <!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka &middot; redis</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>Redis optionnel</h1>
-<p>Redis n'est pas necessaire pour lancer Mboka. Par defaut, le cache, les sessions configurees et les compteurs de connexion utilisent PostgreSQL. Les tokens Sanctum restent toujours dans PostgreSQL.</p>
-<p>Le client PHP <code>predis/predis</code> est fourni par Composer : aucune extension PHP Redis n'est necessaire, y compris sur Windows. Aucun serveur Redis et aucun Horizon ne sont installes par ce changement.</p>
-<h2>Sans Redis (configuration locale actuelle)</h2>
-<pre><code class="language-dotenv">CACHE_STORE=database
+<p>Redis est maintenant active par defaut pour les OTP SMS et e-mail (OTP_CACHE_STORE=otp, base 3). Le cache general, les sessions configurees et les compteurs de connexion utilisent toujours PostgreSQL. Les comptes et les tokens Sanctum restent dans PostgreSQL. Redis doit etre demarre avant les inscriptions et les verifications OTP.</p>
+<p>Le client PHP <code>predis/predis</code> est fourni par Composer : aucune extension PHP Redis n'est necessaire, y compris sur Windows. Le serveur deja fourni par Laragon est utilise en local, sans Docker. Horizon reste absent.</p>
+<h2>Revenir explicitement a un fonctionnement sans Redis</h2>
+<pre><code class="language-dotenv">OTP_CACHE_STORE=database
+CACHE_STORE=database
 CACHE_LIMITER=database
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
@@ -50,11 +51,21 @@ Illuminate\Support\Facades\Redis::connection('sessions')-&gt;ping();
 </code></pre>
 <p>Horizon reste une evolution ulterieure. Les queues conservent leur stockage PostgreSQL par defaut.</p>
 <h2>Stockage OTP optionnel</h2>
-<p>OTP_CACHE_STORE=database conserve par defaut l empreinte du code, les echeances et les compteurs dans le cache PostgreSQL. Pour utiliser Redis :</p>
+<p>OTP_CACHE_STORE=otp conserve maintenant l empreinte du code, les echeances et les compteurs dans Redis. Cette valeur est preparee dans .env.example et utilisee par defaut dans config/otp.php :</p>
 <pre><code class="language-dotenv">OTP_CACHE_STORE=otp
 REDIS_OTP_DB=3
 # REDIS_OTP_URL=redis://127.0.0.1:6379/3
 </code></pre>
 <p>Le store otp utilise une connexion Redis dediee, distincte du cache et des sessions. Ne pas reutiliser leurs bases si un vidage du cache ne doit pas invalider les codes. Aucun basculement automatique en cas de panne. Les routes de verification et de renvoi utilisent les memes regles, sur mobile comme sur web.</p>
 <p>Les operations OTP sont serialisees par verrou de ligne PostgreSQL sur le compte : les compteurs ne peuvent pas etre remis a zero par deux renvois concurrents, et une validation ne peut pas creer deux tokens pour le meme code. Le compte, son etat de verification et les tokens Sanctum restent dans PostgreSQL.</p>
+<p>Les OTP d inscription SMS et e-mail utilisent le meme store et les memes limites. Le canal et le destinataire sont lies au code ; valider un e-mail ne confirme pas le telephone. Redis ne transporte aucun message : les SMS passent par Infobip, les e-mails par SMTP (Mailtrap Sandbox en developpement).</p>
+<h2>Demarrer Redis localement avec Laragon</h2>
+<p>Le script utilise le serveur Redis deja installe dans C:\laragon\bin\redis\redis-x64-5.0.14.1 et cree sa configuration et ses donnees dans .local/redis (ignore par Git). Aucun Docker ni service Windows supplementaire n est necessaire.</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/redis.ps1 start
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/redis.ps1 status
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/redis.ps1 stop
+</code></pre>
+<p>Demarrer Redis apres chaque redemarrage du PC, avant de lancer les parcours OTP. Le processus est lance en arriere-plan sans fenetre. Il ecoute uniquement sur 127.0.0.1:6379, limite sa memoire a 64 Mo et utilise noeviction pour ne pas supprimer des compteurs encore valides quand la memoire est pleine. La persistance AOF est activee. Le parametre -RedisDirectory permet de designer un autre dossier Redis Laragon ; -Port permet de changer le port (adapter aussi REDIS_PORT dans .env). Le script refuse d arreter une instance qu il ne gere pas. Un serveur deja present sur ce port est reutilise ; ses propres parametres de securite, memoire et persistance doivent alors etre geres par son proprietaire.</p>
+<p>La version Redis embarquee dans cet ancien Laragon sert uniquement au developpement local. En production, utiliser un serveur Redis maintenu, avec authentification, reseau prive et TLS selon l hebergeur, et les variables REDIS_* correspondantes.</p>
+<p>Le code expire au bout de 5 minutes, mais l entree Redis peut durer plus longtemps (par exemple environ 16 minutes) pour conserver les quotas d envoi et les blocages. Une validation reussie supprime immediatement l entree ; sinon Redis la supprime automatiquement au terme du TTL. Un redemarrage non propre peut perdre les dernieres ecritures AOF non synchronisees. Les codes et compteurs du stockage PostgreSQL precedent ne sont pas transferes : les comptes en attente doivent demander un nouveau code sur /auth/otp/resend.</p>
 </main></body></html>

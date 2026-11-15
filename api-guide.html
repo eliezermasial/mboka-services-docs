@@ -1,8 +1,9 @@
 <!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka &middot; api-guide</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>Utiliser l API Mboka Services</h1>
 <p>L API connecte clients et prestataires locaux. Son prefixe est <code>/api/mboka-services/v1</code>.</p>
 <h2>Faire une premiere requete</h2>
-<p>Demarrer PostgreSQL puis Laravel depuis le dossier du projet :</p>
+<p>Demarrer PostgreSQL, Redis pour les OTP, puis Laravel depuis le dossier du projet :</p>
 <pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File scripts/postgres.ps1 start
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/redis.ps1 start
 php artisan serve
 </code></pre>
 <p>Consulter le catalogue public :</p>
@@ -12,17 +13,17 @@ X-Locale: fr
 </code></pre>
 <p>Les langues disponibles sont fr, en et ln. Le fichier <code>openapi.json</code> est importable directement dans Postman : Import &gt; fichier ou URL du fichier OpenAPI de la documentation.</p>
 <h2>Authentification mobile et web</h2>
-<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register cree un compte en attente et retourne HTTP 202 avec data.verification_id, expires_in et resend_after, sans token. POST /auth/otp/verify confirme le numero et retourne un token dans data.token. Les connexions suivantes par POST /auth/login utilisent telephone + mot de passe et retournent un token si le numero est deja verifie. Pour les routes protegees :</p>
+<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register cree un compte en attente et retourne HTTP 202 avec data.verification_id, expires_in et resend_after, sans token. POST /auth/otp/verify confirme le contact choisi (SMS ou e-mail) et retourne un token dans data.token. Les connexions suivantes par POST /auth/login utilisent telephone + mot de passe et retournent un token si le contact choisi est deja verifie. Pour les routes protegees :</p>
 <pre><code class="language-http">Authorization: Bearer VOTRE_TOKEN
 Accept: application/json
 </code></pre>
 <p>Le mot de passe d un compte est hache dans PostgreSQL. L empreinte du token est conservee dans personal_access_tokens. POST /auth/logout revoque le token courant. Redis ne remplace pas ce stockage.</p>
 <p>GET /auth/me retourne le compte connecte. Les comptes client et provider peuvent s inscrire ; les droits administrateur ne sont pas accessibles par inscription publique.</p>
-<h2>Verifier son telephone par OTP</h2>
+<h2>Valider l inscription par OTP SMS ou e-mail</h2>
 <ol>
-<li>Appeler POST /auth/register avec les champs habituels du compte.</li>
+<li>Appeler POST /auth/register avec les champs habituels du compte et verification_channel=sms ou email. Par defaut : sms. Le telephone et le pays restent requis ; l e-mail est obligatoire pour le canal email.</li>
 <li>Conserver data.verification_id de la reponse HTTP 202.</li>
-<li>Recevoir le SMS, puis envoyer les donnees suivantes :</li>
+<li>Recevoir le code sur le canal choisi (dans Mailtrap pour les tests e-mail), puis envoyer les donnees suivantes :</li>
 </ol>
 <pre><code class="language-http">POST /api/mboka-services/v1/auth/otp/verify
 Content-Type: application/json
@@ -32,9 +33,9 @@ Content-Type: application/json
   &quot;code&quot;: &quot;123456&quot;
 }
 </code></pre>
-<p>Le code doit etre une chaine de 6 chiffres. Il expire apres 5 minutes. Apres 3 codes incorrects, verification et renvoi sont bloques pendant 15 minutes. Le code est consomme une seule fois ; le succes renseigne phone_verified_at et retourne un token Sanctum. Les anciens tokens du compte sont revoques.</p>
-<p>Pour renvoyer, appeler POST /auth/otp/resend avec verification_id, apres 60 secondes. Maximum 3 envois par numero sur 15 minutes et 10 demandes par IP sur 15 minutes, inscription et renvoi cumules. Le renvoi invalide l ancien code, sans remettre les echecs a zero. Un echec Infobip consomme aussi un essai d envoi pour eviter les boucles de facturation.</p>
-<p>Les comptes deja presents restent non verifies apres migration. Avec le bon mot de passe, POST /auth/login retourne HTTP 403, error_code=phone_verification_required et data.verification_id pour reprendre le parcours. Aucun token n est delivre avant verification. Les anciens tokens ne donnent pas acces aux routes metier protegees tant que le numero n est pas verifie ; logout reste possible.</p>
+<p>Le code doit etre une chaine de 6 chiffres. Il expire apres 5 minutes. Apres 3 codes incorrects, verification et renvoi sont bloques pendant 15 minutes. Le code est consomme une seule fois ; le succes renseigne phone_verified_at pour sms ou email_verified_at pour email, sans confirmer l autre contact, et retourne un token Sanctum. Les anciens tokens du compte sont revoques.</p>
+<p>Pour renvoyer, appeler POST /auth/otp/resend avec verification_id, apres 60 secondes. Maximum 3 envois par compte sur 15 minutes et 10 demandes par IP sur 15 minutes, inscription et renvoi cumules. Le renvoi invalide l ancien code, sans remettre les echecs a zero. Un echec Infobip ou SMTP consomme aussi un essai d envoi pour eviter les boucles de facturation.</p>
+<p>Les comptes deja presents restent non verifies apres migration. Avec le bon mot de passe, POST /auth/login retourne HTTP 403, error_code=phone_verification_required (ou email_verification_required pour les nouvelles inscriptions par e-mail), data.channel et data.verification_id pour reprendre le parcours. Aucun token n est delivre avant verification. Les anciens tokens ne donnent pas acces aux routes metier protegees tant que le contact choisi n est pas verifie ; logout reste possible.</p>
 <p>Si l envoi echoue, HTTP 503 retourne verification_id lorsque le compte a ete cree. Le compte n est pas supprime : reprendre avec resend apres le delai indique. Un code perdu ou expire exige un renvoi.</p>
 <h2>Limites de connexion</h2>
 <p>POST /auth/login autorise 3 echecs par numero normalise + IP sur une fenetre de 15 minutes qui commence au premier echec. Les connexions reussies ne consomment pas ces essais. La quatrieme tentative est refusee jusqu a expiration de la fenetre, meme avec un mot de passe correct. Il existe aussi une limite de 30 requetes/minute par IP, tous numeros confondus.</p>
@@ -107,5 +108,37 @@ INFOBIP_SENDER=VOTRE_EXPEDITEUR_AUTORISE
 </code></pre>
 <p>Puis executer <code>php artisan config:clear</code>. Le compte Infobip doit autoriser les SMS et l expediteur choisi. La cle reste cote Laravel. L API utilise /sms/3/messages avec Authorization: App, et distingue un message accepte d une livraison effectivement recue. Un compte d essai peut limiter les destinataires aux numeros verifies chez Infobip.</p>
 <p>Les codes ne sont jamais retournes dans les reponses API ni ecrits dans les journaux applicatifs. Seul le mode simule local possede une boite SMS privee contenant le texte du message. Ne pas utiliser cette simulation en production.</p>
-<p>Les identifiants d acces sont la seule partie manquante pour l envoi reel ; les tests Infobip utilisent des reponses HTTP simulees et n envoient aucun SMS.</p>
+<p>Les tests automatises utilisent des reponses HTTP simulees et n envoient aucun SMS.</p>
+<h2>OTP e-mail avec Mailtrap Sandbox</h2>
+<p>Mailtrap Sandbox capture les courriels de developpement : ils apparaissent dans son interface, pas dans la boite mail reelle du destinataire. Creer un sandbox dans Mailtrap, ouvrir son onglet Integration, selectionner SMTP/Laravel et copier les identifiants uniquement dans le fichier .env prive :</p>
+<pre><code class="language-dotenv">MAIL_MAILER=smtp
+OTP_MAILER=smtp
+MAIL_SCHEME=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=IDENTIFIANT_DU_SANDBOX
+MAIL_PASSWORD=MOT_DE_PASSE_DU_SANDBOX
+MAIL_FROM_ADDRESS=noreply@mboka.test
+MAIL_FROM_NAME=&quot;Mboka Services&quot;
+MAIL_TIMEOUT=10
+</code></pre>
+<p>Executer ensuite <code>php artisan config:clear</code>. MAIL_SCHEME=smtp autorise la negociation STARTTLS du transport Symfony ; la verification des certificats reste active. Sur ce poste Windows, si PHP ne trouve pas les certificats racines, configurer curl.cainfo et openssl.cafile dans le php.ini avec le fichier de certificats Laragon.</p>
+<p>Exemple Postman, POST /api/mboka-services/v1/auth/register (remplacer country_id par celui retourne par GET /countries et utiliser un nouveau numero) :</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Client Mailtrap&quot;,
+  &quot;country_id&quot;: 7,
+  &quot;phone&quot;: &quot;0999000123&quot;,
+  &quot;email&quot;: &quot;client@example.test&quot;,
+  &quot;verification_channel&quot;: &quot;email&quot;,
+  &quot;password&quot;: &quot;password&quot;,
+  &quot;password_confirmation&quot;: &quot;password&quot;,
+  &quot;account_type&quot;: &quot;client&quot;
+}
+</code></pre>
+<p>La reponse 202 contient data.channel=email, verification_id, expires_in et resend_after. Copier le code a six chiffres affiche dans Mailtrap et appeler /auth/otp/verify avec verification_id et code (chaine). Le token recu permet /auth/me et les routes metier. email_verified_at est renseigne, phone_verified_at reste null. La connexion suivante utilise toujours telephone et mot de passe.</p>
+<p>/auth/otp/resend utilise le canal enregistre lors de l inscription : aucun changement de canal ni de destinataire n est autorise par cette route. Les comptes existants gardent sms ; cette evolution ne confirme pas leurs contacts automatiquement. Les comptes ayant deja un numero doivent reprendre leur verification existante.</p>
+<p>Les limites et le stockage OTP optionnel Redis sont communs aux deux canaux : 5 minutes, 3 erreurs puis 15 minutes de blocage, renvoi apres 60 secondes, 3 envois/15 minutes par compte. L envoi est synchrone et ne necessite aucun worker. Une panne SMTP retourne 503 et conserve le compte en attente avec verification_id ; apres correction, reprendre avec resend sans recreer le compte. Les transports log/array/failover sont refuses pour les OTP e-mail afin de ne pas journaliser les codes ni annoncer un envoi fictif. Le message existe en HTML et texte, localise via X-Locale.</p>
+<p>En production, remplacer les identifiants du Sandbox par ceux d un service d envoi reel, avec un expediteur et un domaine autorises. Le Sandbox n est pas un service de livraison vers les utilisateurs.</p>
+<p>References : <a href="https://docs.mailtrap.io/email-sandbox/setup/sandbox-smtp-integration">integration SMTP Mailtrap</a>, <a href="https://docs.mailtrap.io/getting-started/email-sandbox">Email Sandbox</a>.</p>
+<p>Le stockage OTP est maintenant Redis par defaut (OTP_CACHE_STORE=otp, base 3), pour les SMS comme pour les e-mails. Les comptes, les validations et les tokens Sanctum restent en PostgreSQL. Redis indisponible implique un refus temporaire HTTP 503, sans basculement silencieux. Les anciens codes PostgreSQL ne sont pas transferes ; demander un nouveau code apres le changement de stockage. Voir le <a href="redis.md">guide Redis</a>.</p>
 </main></body></html>

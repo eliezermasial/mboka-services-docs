@@ -3,7 +3,7 @@
     "info": {
         "title": "Mboka Services API",
         "version": "1.0.0-dev",
-        "description": "API Mboka Services en developpement. Inscription avec verification OTP par SMS, puis authentification Bearer Sanctum. Les sessions SPA et la reinitialisation du mot de passe ne sont pas encore exposees.\n\nDocumentation de developpement generee depuis la branche develop. Aucun backend public n est actuellement configure. Importer ce document dans Postman ou utiliser /docs/api en local pour executer des requetes. La console en ligne peut etre soumise aux restrictions du navigateur pour localhost."
+        "description": "API Mboka Services en developpement. Inscription avec verification OTP par SMS ou e-mail au choix, puis authentification Bearer Sanctum. Les sessions SPA et la reinitialisation du mot de passe ne sont pas encore exposees.\n\nDocumentation de developpement generee depuis la branche develop. Aucun backend public n est actuellement configure. Importer ce document dans Postman ou utiliser /docs/api en local pour executer des requetes. La console en ligne peut etre soumise aux restrictions du navigateur pour localhost."
     },
     "servers": [
         {
@@ -15,7 +15,7 @@
         "/auth/register": {
             "post": {
                 "operationId": "v1.auth.register",
-                "summary": "Inscrire un compte et demander la verification SMS",
+                "summary": "Inscrire un compte et demander la verification SMS ou e-mail",
                 "tags": [
                     "Auth"
                 ],
@@ -34,7 +34,7 @@
                         "$ref": "#/components/responses/ValidationException"
                     },
                     "503": {
-                        "description": "Envoi SMS impossible ou stockage indisponible. Le compte reste en attente ; verification_id permet de reprendre lorsqu il est retourne.",
+                        "description": "Envoi SMS/e-mail impossible ou stockage indisponible. Le compte reste en attente ; verification_id permet de reprendre lorsqu il est retourne.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -49,6 +49,13 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
                                                 "verification_id": {
                                                     "type": "string",
                                                     "format": "uuid"
@@ -63,6 +70,7 @@
                                                 }
                                             },
                                             "required": [
+                                                "channel",
                                                 "verification_id",
                                                 "expires_in",
                                                 "resend_after"
@@ -78,7 +86,7 @@
                         }
                     },
                     "202": {
-                        "description": "Envoi SMS accepte ; compte toujours en attente de verification. Aucun token Sanctum.",
+                        "description": "Envoi OTP accepte sur le canal choisi ; compte toujours en attente de verification. Aucun token Sanctum.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -93,6 +101,13 @@
                                         "data": {
                                             "type": "object",
                                             "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
                                                 "verification_id": {
                                                     "type": "string",
                                                     "format": "uuid"
@@ -107,6 +122,7 @@
                                                 }
                                             },
                                             "required": [
+                                                "channel",
                                                 "verification_id",
                                                 "expires_in",
                                                 "resend_after"
@@ -176,7 +192,7 @@
                         }
                     }
                 ],
-                "description": "Cree un compte non verifie et demande un code SMS. Utiliser /auth/otp/verify avant de se connecter. Le mode fake local depose le SMS dans .local/sms-outbox sans envoi reel."
+                "description": "Cree un compte non verifie. verification_channel=sms par defaut ou email (adresse e-mail requise). Demande un code sur ce canal. Utiliser /auth/otp/verify avant de se connecter. Le mode fake local depose le SMS dans .local/sms-outbox sans envoi reel."
             }
         },
         "/auth/login": {
@@ -270,7 +286,7 @@
                         }
                     },
                     "403": {
-                        "description": "Mot de passe correct, mais numero non verifie. Utiliser verification_id pour demander un SMS.",
+                        "description": "Mot de passe correct, mais contact choisi non verifie. Utiliser verification_id pour demander un code sur data.channel.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -285,7 +301,10 @@
                                         },
                                         "error_code": {
                                             "type": "string",
-                                            "const": "phone_verification_required"
+                                            "enum": [
+                                                "phone_verification_required",
+                                                "email_verification_required"
+                                            ]
                                         },
                                         "data": {
                                             "type": "object",
@@ -293,10 +312,18 @@
                                                 "verification_id": {
                                                     "type": "string",
                                                     "format": "uuid"
+                                                },
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "verification_id"
+                                                "verification_id",
+                                                "channel"
                                             ]
                                         }
                                     },
@@ -2736,391 +2763,6 @@
                 ]
             }
         },
-        "/auth/otp/verify": {
-            "post": {
-                "operationId": "v1.auth.otp.verify",
-                "summary": "Confirme le numero avec le code SMS et delivre un token Sanctum",
-                "tags": [
-                    "PhoneOtp"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/VerifyPhoneOtpRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`AuthResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "$ref": "#/components/schemas/AuthResource"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Code ou verification invalide, expire, deja utilise, ou donnees invalides.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "success": {
-                                                    "type": "boolean",
-                                                    "const": false
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "success",
-                                                "message"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "success": {
-                                                    "type": "boolean",
-                                                    "const": false
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                },
-                                                "errors": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "success",
-                                                "message",
-                                                "errors"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "503": {
-                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "const": false
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Limite OTP ou IP atteinte. Le renvoi ne remet pas les echecs a zero.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "const": false
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "retry_after": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message",
-                                        "retry_after"
-                                    ]
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Retry-After": {
-                                "description": "Delai restant en secondes.",
-                                "schema": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [],
-                "parameters": [
-                    {
-                        "name": "X-Locale",
-                        "in": "header",
-                        "required": false,
-                        "description": "Langue des messages.",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "fr",
-                                "en",
-                                "ln"
-                            ]
-                        }
-                    }
-                ],
-                "description": "Code a 6 chiffres, valide 5 minutes, lie au verification_id. Trois echecs bloquent verification et renvoi pendant 15 minutes. Une validation consomme le code, confirme le numero, revoque les anciens tokens et delivre un token Sanctum. Un code ne peut pas etre reutilise."
-            }
-        },
-        "/auth/otp/resend": {
-            "post": {
-                "operationId": "v1.auth.otp.resend",
-                "summary": "Renvoie un code sans remettre a zero les echecs precedents",
-                "tags": [
-                    "PhoneOtp"
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ResendPhoneOtpRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "422": {
-                        "description": "Code ou verification invalide, expire, deja utilise, ou donnees invalides.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "success": {
-                                                    "type": "boolean",
-                                                    "const": false
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "success",
-                                                "message"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "success": {
-                                                    "type": "boolean",
-                                                    "const": false
-                                                },
-                                                "message": {
-                                                    "type": "string"
-                                                },
-                                                "errors": {
-                                                    "type": "object",
-                                                    "additionalProperties": {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            "required": [
-                                                "success",
-                                                "message",
-                                                "errors"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "503": {
-                        "description": "Envoi SMS impossible ou stockage indisponible. Le compte reste en attente ; verification_id permet de reprendre lorsqu il est retourne.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "verification_id": {
-                                                    "type": "string",
-                                                    "format": "uuid"
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer",
-                                                    "example": 300
-                                                },
-                                                "resend_after": {
-                                                    "type": "integer",
-                                                    "example": 60
-                                                }
-                                            },
-                                            "required": [
-                                                "verification_id",
-                                                "expires_in",
-                                                "resend_after"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "202": {
-                        "description": "Envoi SMS accepte ; compte toujours en attente de verification. Aucun token Sanctum.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "verification_id": {
-                                                    "type": "string",
-                                                    "format": "uuid"
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer",
-                                                    "example": 300
-                                                },
-                                                "resend_after": {
-                                                    "type": "integer",
-                                                    "example": 60
-                                                }
-                                            },
-                                            "required": [
-                                                "verification_id",
-                                                "expires_in",
-                                                "resend_after"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message",
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Limite OTP ou IP atteinte. Le renvoi ne remet pas les echecs a zero.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "const": false
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        },
-                                        "retry_after": {
-                                            "type": "integer",
-                                            "minimum": 0
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message",
-                                        "retry_after"
-                                    ]
-                                }
-                            }
-                        },
-                        "headers": {
-                            "Retry-After": {
-                                "description": "Delai restant en secondes.",
-                                "schema": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [],
-                "parameters": [
-                    {
-                        "name": "X-Locale",
-                        "in": "header",
-                        "required": false,
-                        "description": "Langue des messages.",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "fr",
-                                "en",
-                                "ln"
-                            ]
-                        }
-                    }
-                ],
-                "description": "Attendre au moins 60 secondes. Maximum 3 envois par numero sur 15 minutes et 10 demandes/envois par IP sur 15 minutes (inscription et renvoi cumules). Un renvoi invalide le code precedent sans reinitialiser les echecs. Les echecs prestataire consomment aussi le quota d envoi."
-            }
-        },
         "/provider-services": {
             "get": {
                 "operationId": "v1.provider-services.index",
@@ -3673,6 +3315,407 @@
                         }
                     }
                 ]
+            }
+        },
+        "/auth/otp/verify": {
+            "post": {
+                "operationId": "v1.auth.otp.verify",
+                "summary": "Confirme le contact choisi avec le code OTP et delivre un token Sanctum",
+                "tags": [
+                    "RegistrationOtp"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerifyPhoneOtpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AuthResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/AuthResource"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Code ou verification invalide, expire, deja utilise, ou donnees invalides.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite OTP ou IP atteinte. Le renvoi ne remet pas les echecs a zero.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Delai restant en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Code a 6 chiffres, valide 5 minutes, lie au verification_id. Trois echecs bloquent verification et renvoi pendant 15 minutes. Une validation consomme le code, confirme uniquement le contact choisi (phone_verified_at ou email_verified_at), revoque les anciens tokens et delivre un token Sanctum. Un code ne peut pas etre reutilise."
+            }
+        },
+        "/auth/otp/resend": {
+            "post": {
+                "operationId": "v1.auth.otp.resend",
+                "summary": "Renvoie un code sans remettre a zero les echecs precedents",
+                "tags": [
+                    "RegistrationOtp"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResendPhoneOtpRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "422": {
+                        "description": "Code ou verification invalide, expire, deja utilise, ou donnees invalides.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Envoi SMS/e-mail impossible ou stockage indisponible. Le compte reste en attente ; verification_id permet de reprendre lorsqu il est retourne.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
+                                                "verification_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "resend_after": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                }
+                                            },
+                                            "required": [
+                                                "channel",
+                                                "verification_id",
+                                                "expires_in",
+                                                "resend_after"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Envoi OTP accepte sur le canal choisi ; compte toujours en attente de verification. Aucun token Sanctum.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
+                                                "verification_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "resend_after": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                }
+                                            },
+                                            "required": [
+                                                "channel",
+                                                "verification_id",
+                                                "expires_in",
+                                                "resend_after"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite OTP ou IP atteinte. Le renvoi ne remet pas les echecs a zero.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Delai restant en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Attendre au moins 60 secondes. Maximum 3 envois par compte sur 15 minutes et 10 demandes/envois par IP sur 15 minutes (inscription et renvoi cumules). Le canal et le destinataire restent ceux du compte ; le renvoi ne les modifie pas. Un renvoi invalide le code precedent sans reinitialiser les echecs. Les echecs prestataire consomment aussi le quota d envoi."
             }
         },
         "/services": {
@@ -6008,6 +6051,13 @@
                         "pattern": "^\\+[1-9][0-9]{7,14}$",
                         "maxLength": 16
                     },
+                    "verification_channel": {
+                        "type": "string",
+                        "enum": [
+                            "sms",
+                            "email"
+                        ]
+                    },
                     "email": {
                         "type": [
                             "string",
@@ -6748,6 +6798,15 @@
                             "null"
                         ]
                     },
+                    "email_verified_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "verification_channel": {
+                        "type": "string"
+                    },
                     "roles": {
                         "type": "array",
                         "items": {
@@ -6984,6 +7043,8 @@
                     "phone",
                     "phone_verified_at",
                     "email",
+                    "email_verified_at",
+                    "verification_channel",
                     "roles",
                     "customer_profile",
                     "provider_profile"
