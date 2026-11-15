@@ -2612,6 +2612,12 @@
                             }
                         }
                     },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
                     "503": {
                         "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
                         "content": {
@@ -2634,9 +2640,36 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Adresse absente ou appartenant a un autre compte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
-                "security": []
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "operationId": "v1.locations.update",
@@ -2720,6 +2753,29 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Adresse absente ou appartenant a un autre compte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2777,6 +2833,29 @@
                     },
                     "503": {
                         "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Adresse absente ou appartenant a un autre compte.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2910,6 +2989,84 @@
                 ]
             }
         },
+        "/locations/{location}/default": {
+            "patch": {
+                "operationId": "v1.locations.default",
+                "tags": [
+                    "Location"
+                ],
+                "parameters": [
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LocationResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LocationResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/locations": {
             "get": {
                 "operationId": "v1.locations.index",
@@ -2928,11 +3085,11 @@
                             }
                         }
                     },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     },
                     "503": {
                         "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
@@ -2978,7 +3135,8 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "description": "Carnet prive du compte connecte, plusieurs adresses et une adresse par defaut."
             },
             "post": {
                 "operationId": "v1.locations.store",
@@ -4360,6 +4518,209 @@
                     }
                 ],
                 "description": "Compte connecte uniquement. name synchronise le nom du compte et de ses profils. bio reserve au prestataire (500 caracteres max). avatar_media_id choisit une image profile appartenant au compte, prealablement envoyee via /medias ; null retire la photo. Contacts et mots de passe se modifient uniquement par les routes de securite. Pays/adresse utilisent le module geographique existant ; roles, notes et certifications ne sont pas modifiables ici."
+            }
+        },
+        "/provider-area": {
+            "get": {
+                "operationId": "v1.provider-area.show",
+                "summary": "Consulte le point de depart prive et la zone d intervention du prestataire connecte",
+                "tags": [
+                    "ProviderArea"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Operation reussie."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "area": {
+                                                    "$ref": "#/components/schemas/ProviderAreaResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "area"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "put": {
+                "operationId": "v1.provider-area.update",
+                "summary": "Configure le rayon, le mode de travail et la publication volontaire de l adresse de l etablissement",
+                "tags": [
+                    "ProviderArea"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProviderAreaRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Zone d intervention mise a jour."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "area": {
+                                                    "$ref": "#/components/schemas/ProviderAreaResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "area"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         "/provider-services": {
@@ -6100,7 +6461,8 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "description": "visit_mode=at_client par defaut : location_id appartenant au client OU location ponctuelle (sans ajout au carnet). at_provider exige provider_id sans adresse client, et copie le lieu du prestataire. Offre active et mode compatible requis. Rayon PostGIS a vol d oiseau controle si les deux GPS existent ; sans GPS, couverture a convenir. Copie du lieu et distance arrondie conservees independamment des modifications ulterieures."
             }
         },
         "/service-requests/{service_request}": {
@@ -7132,6 +7494,24 @@
                     "id": {
                         "type": "integer"
                     },
+                    "label": {
+                        "type": "string"
+                    },
+                    "district": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "instructions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_default": {
+                        "type": "boolean"
+                    },
                     "country_id": {
                         "type": "integer"
                     },
@@ -7200,14 +7580,24 @@
                         "type": "string"
                     },
                     "latitude": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "longitude": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
                     "id",
+                    "label",
+                    "district",
+                    "instructions",
+                    "is_default",
                     "country_id",
                     "country",
                     "city_id",
@@ -7615,6 +8005,40 @@
                 ],
                 "title": "OtpResponseResource"
             },
+            "ProviderAreaResource": {
+                "type": "object",
+                "properties": {
+                    "work_mode": {
+                        "type": "string"
+                    },
+                    "intervention_radius_km": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "publish_business_address": {
+                        "type": "boolean"
+                    },
+                    "origin": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "work_mode",
+                    "intervention_radius_km",
+                    "publish_business_address",
+                    "origin"
+                ],
+                "title": "ProviderAreaResource"
+            },
             "ProviderServiceCollectionResource": {
                 "type": "object",
                 "properties": {
@@ -7670,12 +8094,16 @@
                             },
                             "user_id": {
                                 "type": "integer"
+                            },
+                            "area": {
+                                "$ref": "#/components/schemas/PublicProviderAreaResource"
                             }
                         },
                         "required": [
                             "id",
                             "name",
-                            "user_id"
+                            "user_id",
+                            "area"
                         ]
                     },
                     "service": {
@@ -7768,6 +8196,73 @@
                     "data"
                 ],
                 "title": "ProviderServiceResponseResource"
+            },
+            "PublicProviderAreaResource": {
+                "type": "object",
+                "properties": {
+                    "work_mode": {
+                        "type": "string"
+                    },
+                    "intervention_radius_km": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "country_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "city_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "district": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "coverage_configured": {
+                        "type": "boolean"
+                    },
+                    "business_address": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "address": {
+                                "type": "string"
+                            },
+                            "latitude": {
+                                "type": "string"
+                            },
+                            "longitude": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "address",
+                            "latitude",
+                            "longitude"
+                        ]
+                    }
+                },
+                "required": [
+                    "work_mode",
+                    "intervention_radius_km",
+                    "country_id",
+                    "city_id",
+                    "district",
+                    "coverage_configured",
+                    "business_address"
+                ],
+                "title": "PublicProviderAreaResource"
             },
             "RegisterRequest": {
                 "type": "object",
@@ -8046,38 +8541,136 @@
                             "category"
                         ]
                     },
-                    "location": {
+                    "visit_mode": {
+                        "type": "string",
+                        "enum": [
+                            "at_client",
+                            "at_provider"
+                        ]
+                    },
+                    "approximate_distance_km": {
                         "type": [
-                            "object",
+                            "integer",
                             "null"
-                        ],
-                        "properties": {
-                            "id": {
-                                "type": "integer"
+                        ]
+                    },
+                    "location": {
+                        "description": "Copie historique. Zone uniquement avant acceptation pour l autre participant ; details pour le proprietaire, admin et participants apres acceptation. Annulation/refus masque a nouveau les details.",
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "country_id": {
+                                        "type": "integer"
+                                    },
+                                    "country_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "city_id": {
+                                        "type": "integer"
+                                    },
+                                    "city_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "district": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "exact_location_visible": {
+                                        "type": "boolean",
+                                        "const": false
+                                    }
+                                },
+                                "required": [
+                                    "country_id",
+                                    "country_name",
+                                    "city_id",
+                                    "city_name",
+                                    "district",
+                                    "exact_location_visible"
+                                ],
+                                "additionalProperties": false
                             },
-                            "country_id": {
-                                "type": "integer"
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "country_id": {
+                                        "type": "integer"
+                                    },
+                                    "country_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "city_id": {
+                                        "type": "integer"
+                                    },
+                                    "city_name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "district": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "label": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "instructions": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "latitude": {
+                                        "type": [
+                                            "number",
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "longitude": {
+                                        "type": [
+                                            "number",
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "exact_location_visible": {
+                                        "type": "boolean",
+                                        "const": true
+                                    }
+                                },
+                                "required": [
+                                    "address",
+                                    "exact_location_visible"
+                                ]
                             },
-                            "city_id": {
-                                "type": "integer"
-                            },
-                            "address": {
-                                "type": "string"
-                            },
-                            "latitude": {
-                                "type": "string"
-                            },
-                            "longitude": {
-                                "type": "string"
+                            {
+                                "type": "null"
                             }
-                        },
-                        "required": [
-                            "id",
-                            "country_id",
-                            "city_id",
-                            "address",
-                            "latitude",
-                            "longitude"
                         ]
                     }
                 },
@@ -8089,6 +8682,8 @@
                     "client",
                     "provider",
                     "service",
+                    "visit_mode",
+                    "approximate_distance_km",
                     "location"
                 ],
                 "title": "ServiceRequestResource"
@@ -8253,19 +8848,44 @@
                     },
                     "address": {
                         "type": "string",
-                        "maxLength": 500
+                        "maxLength": 255
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "district": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 160
+                    },
+                    "instructions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
                     },
                     "latitude": {
                         "type": [
                             "number",
                             "null"
-                        ]
+                        ],
+                        "minimum": -90,
+                        "maximum": 90
                     },
                     "longitude": {
                         "type": [
                             "number",
                             "null"
-                        ]
+                        ],
+                        "minimum": -180,
+                        "maximum": 180
+                    },
+                    "is_default": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -8273,7 +8893,8 @@
                     "city_id",
                     "address"
                 ],
-                "title": "StoreLocationRequest"
+                "title": "StoreLocationRequest",
+                "description": "Adresse privee du compte. Coordonnees facultatives, mais toujours par paire. Ville du pays du profil. PUT remplace les champs optionnels omis."
             },
             "StoreMediaRequest": {
                 "type": "object",
@@ -8367,8 +8988,75 @@
                     "service_id": {
                         "type": "integer"
                     },
+                    "visit_mode": {
+                        "type": "string",
+                        "enum": [
+                            "at_client",
+                            "at_provider"
+                        ]
+                    },
                     "location_id": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "location": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "country_id": {
+                                "type": "integer"
+                            },
+                            "city_id": {
+                                "type": "integer"
+                            },
+                            "address": {
+                                "type": "string",
+                                "maxLength": 255
+                            },
+                            "label": {
+                                "type": "string",
+                                "maxLength": 80
+                            },
+                            "district": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 160
+                            },
+                            "instructions": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 1000
+                            },
+                            "latitude": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ],
+                                "minimum": -90,
+                                "maximum": 90
+                            },
+                            "longitude": {
+                                "type": [
+                                    "number",
+                                    "null"
+                                ],
+                                "minimum": -180,
+                                "maximum": 180
+                            }
+                        },
+                        "required": [
+                            "country_id",
+                            "city_id",
+                            "address"
+                        ]
                     },
                     "provider_id": {
                         "type": [
@@ -8386,11 +9074,76 @@
                 },
                 "required": [
                     "service_id",
-                    "location_id",
                     "description",
                     "scheduled_date"
                 ],
-                "title": "StoreServiceRequestRequest"
+                "title": "StoreServiceRequestRequest",
+                "oneOf": [
+                    {
+                        "required": [
+                            "location_id"
+                        ],
+                        "properties": {
+                            "location_id": {
+                                "type": "integer"
+                            },
+                            "visit_mode": {
+                                "const": "at_client"
+                            }
+                        },
+                        "not": {
+                            "required": [
+                                "location"
+                            ]
+                        }
+                    },
+                    {
+                        "required": [
+                            "location"
+                        ],
+                        "properties": {
+                            "location": {
+                                "type": "object"
+                            },
+                            "visit_mode": {
+                                "const": "at_client"
+                            }
+                        },
+                        "not": {
+                            "required": [
+                                "location_id"
+                            ]
+                        }
+                    },
+                    {
+                        "required": [
+                            "visit_mode",
+                            "provider_id"
+                        ],
+                        "properties": {
+                            "visit_mode": {
+                                "const": "at_provider"
+                            },
+                            "provider_id": {
+                                "type": "integer"
+                            }
+                        },
+                        "not": {
+                            "anyOf": [
+                                {
+                                    "required": [
+                                        "location"
+                                    ]
+                                },
+                                {
+                                    "required": [
+                                        "location_id"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
             },
             "UpdateCategoryRequest": {
                 "type": "object",
@@ -8427,19 +9180,44 @@
                     },
                     "address": {
                         "type": "string",
-                        "maxLength": 500
+                        "maxLength": 255
+                    },
+                    "label": {
+                        "type": "string",
+                        "maxLength": 80
+                    },
+                    "district": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 160
+                    },
+                    "instructions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
                     },
                     "latitude": {
                         "type": [
                             "number",
                             "null"
-                        ]
+                        ],
+                        "minimum": -90,
+                        "maximum": 90
                     },
                     "longitude": {
                         "type": [
                             "number",
                             "null"
-                        ]
+                        ],
+                        "minimum": -180,
+                        "maximum": 180
+                    },
+                    "is_default": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -8447,7 +9225,8 @@
                     "city_id",
                     "address"
                 ],
-                "title": "UpdateLocationRequest"
+                "title": "UpdateLocationRequest",
+                "description": "Adresse privee du compte. Coordonnees facultatives, mais toujours par paire. Ville du pays du profil. PUT remplace les champs optionnels omis."
             },
             "UpdateMediaRequest": {
                 "type": "object",
@@ -8550,6 +9329,39 @@
                     }
                 },
                 "title": "UpdateProfileRequest"
+            },
+            "UpdateProviderAreaRequest": {
+                "type": "object",
+                "properties": {
+                    "location_id": {
+                        "type": "integer"
+                    },
+                    "work_mode": {
+                        "type": "string",
+                        "enum": [
+                            "on_site",
+                            "at_provider",
+                            "both"
+                        ]
+                    },
+                    "intervention_radius_km": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 200
+                    },
+                    "publish_business_address": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "location_id",
+                    "work_mode"
+                ],
+                "title": "UpdateProviderAreaRequest",
+                "description": "Prestataire uniquement. Adresse appartenant au compte. Rayon requis pour on_site/both (1 a 200 km). Publication volontaire uniquement at_provider/both. La modification ou le remplacement d une adresse retire sa publication."
             },
             "UpdateProviderServiceRequest": {
                 "type": "object",
@@ -8723,10 +9535,16 @@
                                         "type": "string"
                                     },
                                     "latitude": {
-                                        "type": "string"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
                                     },
                                     "longitude": {
-                                        "type": "string"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
                                     }
                                 },
                                 "required": [
@@ -8829,10 +9647,16 @@
                                         "type": "string"
                                     },
                                     "latitude": {
-                                        "type": "string"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
                                     },
                                     "longitude": {
-                                        "type": "string"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
                                     }
                                 },
                                 "required": [

@@ -67,7 +67,11 @@ Content-Type: application/json
 </tr>
 <tr>
 <td>locations</td>
-<td>Adresse du profil, pays, ville et coordonnees</td>
+<td>Carnet d adresses prive et choix de l adresse par defaut</td>
+</tr>
+<tr>
+<td>provider-area</td>
+<td>Adresse de reference, mode d intervention et rayon du prestataire</td>
 </tr>
 <tr>
 <td>service-requests</td>
@@ -227,4 +231,30 @@ MAIL_TIMEOUT=10
 <h3>Connexion et recuperation directement par e-mail</h3>
 <p>POST /auth/login accepte exactement un identifiant : {&quot;email&quot;:&quot;<a href="mailto:client@example.test">client@example.test</a>&quot;,&quot;password&quot;:&quot;MOT_DE_PASSE&quot;} ou {&quot;phone&quot;:&quot;+243999000123&quot;,&quot;password&quot;:&quot;MOT_DE_PASSE&quot;}. Ne pas fournir les deux. L e-mail est normalise en minuscules et doit etre verifie pour servir a la connexion ; une inscription encore en attente retourne toujours son erreur de verification. Les 3 echecs/15 minutes par compte+IP sont partages entre son telephone et son e-mail pour eviter de contourner la limite en alternant les identifiants. La limite globale reste 30 requetes/minute/IP.</p>
 <p>POST /auth/password/forgot accepte {&quot;email&quot;:&quot;<a href="mailto:client@example.test">client@example.test</a>&quot;} sans telephone : le canal par defaut devient email. Avec un telephone seul, le canal par defaut devient sms. channel peut etre indique explicitement pour choisir un autre contact deja verifie du meme compte. La reponse generique et /auth/password/reset restent identiques. Les deux identifiants fournis ensemble sont refuses.</p>
+<h2>Adresses privees et zones d intervention</h2>
+<p>Toutes les routes /locations et /provider-area exigent un token Sanctum et une inscription verifiee. GET /locations liste uniquement ses propres adresses. GET /locations/{location}, PUT et DELETE renvoient 404 pour une adresse appartenant a un autre compte, meme si son identifiant est connu. Le detail d une adresse n est plus public.</p>
+<h3>Carnet d adresses client</h3>
+<p>POST /locations enregistre une adresse ; PUT /locations/{location} remplace ses donnees. Exemple (remplacer les identifiants par ceux de votre pays et ville) :</p>
+<pre><code class="language-json">{&quot;country_id&quot;:7,&quot;city_id&quot;:1,&quot;label&quot;:&quot;home&quot;,&quot;district&quot;:&quot;Gombe&quot;,&quot;address&quot;:&quot;Adresse de demonstration&quot;,&quot;instructions&quot;:&quot;Indications privees&quot;,&quot;latitude&quot;:-4.32,&quot;longitude&quot;:15.30,&quot;is_default&quot;:true}
+</code></pre>
+<p>label est libre (80 caracteres maximum), district optionnel (160), address obligatoire (255), instructions privees optionnelles (1000). Latitude et longitude sont facultatives, mais doivent etre fournies ensemble ; valeurs admises : -90 a 90 et -180 a 180. La ville doit appartenir au pays, et le pays doit correspondre au profil. L application mobile ou web demande l autorisation GPS ; Laravel accepte aussi une adresse saisie manuellement.</p>
+<p>La premiere adresse devient celle par defaut. PATCH /locations/{location}/default choisit une autre adresse. DELETE effectue une suppression logique et choisit la plus ancienne adresse restante comme remplacement, ou aucune s il n en reste plus. Modifier une adresse ne modifie pas les interventions deja creees. PUT est un remplacement : les champs optionnels omis sont effaces ou remis a leur valeur par defaut.</p>
+<h3>Zone du prestataire</h3>
+<p>Le prestataire utilise aussi /locations pour enregistrer ses adresses, puis GET /provider-area pour consulter sa configuration et PUT /provider-area pour la remplacer :</p>
+<pre><code class="language-json">{&quot;location_id&quot;:1,&quot;work_mode&quot;:&quot;both&quot;,&quot;intervention_radius_km&quot;:10,&quot;publish_business_address&quot;:false}
+</code></pre>
+<p>location_id doit appartenir au prestataire et devient son adresse de reference. work_mode vaut on_site (chez le client), at_provider (dans son etablissement) ou both. Le rayon est obligatoire pour on_site et both : de 1 a 200 km. Sans GPS, le rayon ne peut pas etre controle automatiquement. coverage_configured dans les offres publiques indique si la configuration permet ce controle (ou si une adresse d etablissement est disponible en mode at_provider).</p>
+<p>Les offres publiques exposent seulement le pays, la ville, le quartier, le mode et le rayon. L adresse exacte et le GPS restent prives. publish_business_address=true publie volontairement l adresse de l etablissement et ses coordonnees dans provider.area.business_address, uniquement pour at_provider ou both ; les instructions restent toujours privees. Modifier l adresse de reference, changer l adresse par defaut ou la supprimer retire cette publication : un nouvel accord explicite via PUT /provider-area est necessaire.</p>
+<h3>Adresse d une intervention</h3>
+<p>POST /service-requests accepte trois cas :</p>
+<ul>
+<li>Chez le client (visit_mode=at_client par defaut) : location_id d une de ses adresses enregistrees.</li>
+<li>Chez le client : location avec country_id, city_id, address et les champs facultatifs ci-dessus, sans location_id. Cette adresse ponctuelle n est pas ajoutee au carnet.</li>
+<li>Chez le prestataire : visit_mode=at_provider et provider_id obligatoires, sans location ni location_id. L adresse de reference du prestataire est copiee.</li>
+</ul>
+<p>Le service doit etre approuve. Un prestataire choisi doit proposer ce service avec availability_status=on et un mode compatible. Pour une intervention chez le client, si les deux lieux ont des coordonnees et si un rayon est configure, PostGIS controle la distance a vol d oiseau et refuse une demande hors zone (422). Sans coordonnees, la demande reste possible ; la couverture doit etre convenue avec le prestataire. approximate_distance_km vaut null si le calcul est impossible, sinon une distance arrondie au kilometre superieur (minimum 1), conservee avec la demande. Il ne s agit ni d une distance routiere ni d un temps de trajet.</p>
+<p>Le lieu est une copie de l adresse au moment de la demande (ou du nouvel etablissement lors d une reaffectation en attente). Une modification ou suppression ulterieure de l adresse source ne change pas ce lieu historique. Le prestataire affecte voit seulement pays, ville et quartier avant acceptation pour une visite chez le client. Le client voit seulement cette zone avant acceptation pour une visite chez le prestataire. location.exact_location_visible indique si les champs exacts sont retournes. Apres acceptation, les deux participants voient l adresse, les instructions et le GPS ; apres annulation ou refus, seul le proprietaire du lieu et l administrateur les voient. Les autres comptes n ont pas acces a la demande.</p>
+<p>Les adresses et copies historiques sont conservees dans PostgreSQL ; PostGIS calcule les distances. Redis n est pas utilise pour stocker ces adresses. Aucun suivi GPS continu ni endpoint de recherche de prestataires par distance n est ajoute dans cette etape.</p>
+<h3>Reprise des anciennes donnees</h3>
+<p>Les migrations attribuent les anciennes adresses aux comptes lies a leurs profils. Une adresse partagee par plusieurs comptes est copiee pour chacun ; une adresse sans proprietaire reste inaccessible via /locations. Les anciennes demandes recoivent une copie de l adresse actuellement presente en base : une ancienne adresse deja remplacee avant migration ne peut pas etre reconstituee. Les migrations ne suppriment aucune demande. Le retour arriere est refuse tant qu il existe des demandes sans adresse source ou des adresses sans GPS necessitant les nouvelles structures.</p>
 </main></body></html>
