@@ -3,7 +3,7 @@
     "info": {
         "title": "Mboka Services API",
         "version": "1.0.0-dev",
-        "description": "API Mboka Services en developpement. Inscription avec verification OTP par SMS ou e-mail au choix, puis authentification Bearer Sanctum. Les sessions SPA et la reinitialisation du mot de passe ne sont pas encore exposees.\n\nDocumentation de developpement generee depuis la branche develop. Aucun backend public n est actuellement configure. Importer ce document dans Postman ou utiliser /docs/api en local pour executer des requetes. La console en ligne peut etre soumise aux restrictions du navigateur pour localhost."
+        "description": "API Mboka Services en developpement. Inscription avec verification OTP par SMS ou e-mail au choix, puis authentification Bearer Sanctum. Profils prives, recuperation du compte par OTP, changement verifie des contacts et gestion des appareils. Les sessions SPA ne sont pas encore exposees.\n\nDocumentation de developpement generee depuis la branche develop. Aucun backend public n est actuellement configure. Importer ce document dans Postman ou utiliser /docs/api en local pour executer des requetes. La console en ligne peut etre soumise aux restrictions du navigateur pour localhost."
     },
     "servers": [
         {
@@ -12,6 +12,1034 @@
         }
     ],
     "paths": {
+        "/auth/password/forgot": {
+            "post": {
+                "operationId": "v1.auth.password.forgot",
+                "summary": "Demande un OTP de recuperation sur un contact deja verifie. Reponse volontairement generique",
+                "tags": [
+                    "AccountSecurity"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Reponse generique, y compris compte inconnu, contact non verifie, quota compte atteint ou echec prestataire. verification_id est opaque. Repeter la meme requete pour demander un renvoi.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
+                                                "verification_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "resend_after": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                }
+                                            },
+                                            "required": [
+                                                "channel",
+                                                "verification_id",
+                                                "expires_in",
+                                                "resend_after"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Donnees invalides, code expire ou incorrect, mot de passe actuel incorrect ou contact indisponible.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite de tentatives ou de demandes atteinte. Le renvoi conserve les echecs et quotas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Attente en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Identifie le compte par email, telephone international ou telephone local + country_id. Fournir exactement un identifiant. channel=email ou sms est optionnel : par defaut email avec un identifiant email, sms avec un telephone. Envoi uniquement au contact correspondant deja verifie. Jamais de changement de destinataire fourni par le client. Reponse identique en cas de compte inconnu, contact non verifie ou echec prestataire ; 202 ne prouve pas la livraison. Attendre 60 secondes avant renvoi. Maximum 3 envois/15 minutes par compte pour la recuperation, tous canaux et IP confondus. Les appels partagent le limiteur IP OTP des inscriptions et changements de contact."
+            }
+        },
+        "/auth/password/reset": {
+            "post": {
+                "operationId": "v1.auth.password.reset",
+                "summary": "Consomme l OTP de recuperation, change le mot de passe et revoque tous les tokens",
+                "tags": [
+                    "AccountSecurity"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Modification confirmee. Tous les tokens sont revoques ; se reconnecter avec le mot de passe et le numero actuels. Aucun token automatique.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "reauthentication_required": {
+                                                    "type": "boolean",
+                                                    "const": true
+                                                }
+                                            },
+                                            "required": [
+                                                "reauthentication_required"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Donnees invalides, code expire ou incorrect, mot de passe actuel incorrect ou contact indisponible.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite de tentatives ou de demandes atteinte. Le renvoi conserve les echecs et quotas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Attente en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Verification_id de password/forgot, code a 6 chiffres (chaine) et password + password_confirmation (minimum 8 caracteres). Code valable 5 minutes ; 3 erreurs bloquent 15 minutes. Code lie au compte, au contact deja verifie et a la recuperation uniquement. Succes : mot de passe hache modifie et tous les tokens Sanctum revoques ; aucun contact non verifie ne devient verifie."
+            }
+        },
+        "/auth/password": {
+            "put": {
+                "operationId": "v1.auth.password.change",
+                "summary": "Change le mot de passe apres verification de l ancien ; une reconnexion est requise",
+                "tags": [
+                    "AccountSecurity"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Modification confirmee. Tous les tokens sont revoques ; se reconnecter avec le mot de passe et le numero actuels. Aucun token automatique.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "reauthentication_required": {
+                                                    "type": "boolean",
+                                                    "const": true
+                                                }
+                                            },
+                                            "required": [
+                                                "reauthentication_required"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "description": "Donnees invalides, code expire ou incorrect, mot de passe actuel incorrect ou contact indisponible.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite de tentatives ou de demandes atteinte. Le renvoi conserve les echecs et quotas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Attente en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/auth/profile/contact-change": {
+            "post": {
+                "operationId": "v1.auth.contact.request",
+                "summary": "Demande la verification d un nouveau contact sans modifier le contact actuel",
+                "tags": [
+                    "AccountSecurity"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangeContactRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "description": "Donnees invalides, code expire ou incorrect, mot de passe actuel incorrect ou contact indisponible.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Envoi du code ou stockage indisponible. Aucun changement de contact applique.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
+                                                "verification_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "resend_after": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                }
+                                            },
+                                            "required": [
+                                                "channel",
+                                                "verification_id",
+                                                "expires_in",
+                                                "resend_after"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "OTP envoye au nouveau contact ; les anciennes coordonnees restent actives.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "channel": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "sms",
+                                                        "email"
+                                                    ]
+                                                },
+                                                "verification_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "resend_after": {
+                                                    "type": "integer",
+                                                    "example": 60
+                                                }
+                                            },
+                                            "required": [
+                                                "channel",
+                                                "verification_id",
+                                                "expires_in",
+                                                "resend_after"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite de tentatives ou de demandes atteinte. Le renvoi conserve les echecs et quotas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Attente en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "current_password, channel=email|sms, value=nouveau contact. Le nouveau contact doit etre disponible. Envoi OTP au nouveau contact ; ne remplace rien avant confirmation. Le meme appel apres 60 secondes renvoie un code sans remettre les limites a zero. channel=email permet aussi de verifier l e-mail secondaire actuel. Les confirmations sont liees au compte et a ce type de contact."
+            }
+        },
+        "/auth/profile/contact-change/verify": {
+            "post": {
+                "operationId": "v1.auth.contact.verify",
+                "summary": "Confirme le nouveau contact ; tous les tokens sont revoques",
+                "tags": [
+                    "AccountSecurity"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VerifyContactRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Modification confirmee. Tous les tokens sont revoques ; se reconnecter avec le mot de passe et le numero actuels. Aucun token automatique.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": true
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "reauthentication_required": {
+                                                    "type": "boolean",
+                                                    "const": true
+                                                }
+                                            },
+                                            "required": [
+                                                "reauthentication_required"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "description": "Donnees invalides, code expire ou incorrect, mot de passe actuel incorrect ou contact indisponible.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "success": {
+                                                    "type": "boolean",
+                                                    "const": false
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "success",
+                                                "message",
+                                                "errors"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Limite de tentatives ou de demandes atteinte. Le renvoi conserve les echecs et quotas.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "retry_after": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "retry_after"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Attente en secondes.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "channel, verification_id et code. Confirme uniquement le nouveau contact choisi. Tous les tokens sont revoques apres succes. Les OTP d inscription et de recuperation ne sont pas acceptes sur cette route."
+            }
+        },
         "/auth/register": {
             "post": {
                 "operationId": "v1.auth.register",
@@ -198,7 +1226,7 @@
         "/auth/login": {
             "post": {
                 "operationId": "v1.auth.login",
-                "summary": "Connexion par telephone",
+                "summary": "Connexion par telephone ou e-mail verifie",
                 "tags": [
                     "Auth"
                 ],
@@ -353,7 +1381,7 @@
                         }
                     }
                 ],
-                "description": "Mobile et web: 3 echecs par numero normalise + IP dans une fenetre de 15 minutes commencant au premier echec. Les succes ne consomment pas ces essais. Limite globale: 30 requetes/minute/IP. Stockage PostgreSQL par defaut, Redis optionnel. La reponse contient un token Bearer Sanctum, pas une session SPA."
+                "description": "Mobile et web: connexion par phone ou email verifie, avec password. Fournir exactement un identifiant. Les e-mails sont normalises en minuscules. 3 echecs par compte + IP, partages entre telephone et e-mail dans une fenetre de 15 minutes commencant au premier echec. Les succes ne consomment pas ces essais. Limite globale: 30 requetes/minute/IP. Stockage PostgreSQL par defaut, Redis optionnel. La reponse contient un token Bearer Sanctum, pas une session SPA."
             }
         },
         "/auth/me": {
@@ -1122,6 +2150,424 @@
                     }
                 },
                 "security": []
+            }
+        },
+        "/auth/devices": {
+            "get": {
+                "operationId": "v1.auth.devices.index",
+                "summary": "Liste les tokens appareils du compte sans exposer leurs empreintes",
+                "tags": [
+                    "Device"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tokens appareils du compte uniquement, sans valeur de token ni empreinte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "devices": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "current": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "created_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "format": "date-time"
+                                                            },
+                                                            "last_used_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "format": "date-time"
+                                                            },
+                                                            "expires_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ],
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "current"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "devices"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/auth/devices/others": {
+            "delete": {
+                "operationId": "v1.auth.devices.others",
+                "summary": "Deconnecte les autres appareils, en conservant le token courant",
+                "tags": [
+                    "Device"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Les appareils selectionnes ont ete deconnectes."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/auth/devices/{device}": {
+            "delete": {
+                "operationId": "v1.auth.devices.destroy",
+                "summary": "Revoque un token appartenant au compte connecte",
+                "tags": [
+                    "Device"
+                ],
+                "parameters": [
+                    {
+                        "name": "device",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Les appareils selectionnes ont ete deconnectes."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Token inexistant ou appartenant a un autre compte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/logout-all": {
+            "post": {
+                "operationId": "v1.auth.logout-all",
+                "summary": "Deconnecte tous les appareils, y compris le token courant",
+                "tags": [
+                    "Device"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Les appareils selectionnes ont ete deconnectes."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         "/locations/{location}": {
@@ -2761,6 +4207,159 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/auth/profile": {
+            "get": {
+                "operationId": "v1.auth.profile.show",
+                "summary": "Retourne le profil prive du compte connecte",
+                "tags": [
+                    "Profile"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AuthResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "patch": {
+                "operationId": "v1.auth.profile.update",
+                "summary": "Modifie le nom, la biographie prestataire et la photo du compte connecte",
+                "tags": [
+                    "Profile"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AuthResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Compte connecte uniquement. name synchronise le nom du compte et de ses profils. bio reserve au prestataire (500 caracteres max). avatar_media_id choisit une image profile appartenant au compte, prealablement envoyee via /medias ; null retire la photo. Contacts et mots de passe se modifient uniquement par les routes de securite. Pays/adresse utilisent le module geographique existant ; roles, notes et certifications ne sont pas modifiables ici."
             }
         },
         "/provider-services": {
@@ -5260,6 +6859,58 @@
                 ],
                 "title": "CategoryResponseResource"
             },
+            "ChangeContactRequest": {
+                "type": "object",
+                "properties": {
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "sms",
+                            "email"
+                        ]
+                    },
+                    "value": {
+                        "type": "string",
+                        "pattern": "^\\+[1-9][0-9]{7,14}$",
+                        "maxLength": 255
+                    },
+                    "current_password": {
+                        "type": "string",
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "channel",
+                    "value",
+                    "current_password"
+                ],
+                "title": "ChangeContactRequest"
+            },
+            "ChangePasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "current_password": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 255
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "current_password",
+                    "password",
+                    "password_confirmation"
+                ],
+                "title": "ChangePasswordRequest"
+            },
             "CountryCityResource": {
                 "type": "object",
                 "properties": {
@@ -5385,6 +7036,63 @@
                     "data"
                 ],
                 "title": "CountryResponseResource"
+            },
+            "ForgotPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "pattern": "^\\+[1-9][0-9]{7,14}$"
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "country_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "sms",
+                            "email"
+                        ]
+                    }
+                },
+                "required": [],
+                "title": "ForgotPasswordRequest",
+                "oneOf": [
+                    {
+                        "required": [
+                            "phone"
+                        ],
+                        "not": {
+                            "required": [
+                                "email"
+                            ]
+                        }
+                    },
+                    {
+                        "required": [
+                            "email"
+                        ],
+                        "not": {
+                            "required": [
+                                "phone"
+                            ]
+                        }
+                    }
+                ]
             },
             "LocationCollectionResource": {
                 "type": "object",
@@ -5549,7 +7257,10 @@
                 "type": "object",
                 "properties": {
                     "phone": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "country_id": {
                         "type": [
@@ -5565,7 +7276,8 @@
                             "string",
                             "null"
                         ],
-                        "format": "email"
+                        "format": "email",
+                        "maxLength": 255
                     },
                     "account_type": {
                         "type": [
@@ -5588,10 +7300,31 @@
                     }
                 },
                 "required": [
-                    "phone",
                     "password"
                 ],
-                "title": "LoginRequest"
+                "title": "LoginRequest",
+                "oneOf": [
+                    {
+                        "required": [
+                            "phone"
+                        ],
+                        "not": {
+                            "required": [
+                                "email"
+                            ]
+                        }
+                    },
+                    {
+                        "required": [
+                            "email"
+                        ],
+                        "not": {
+                            "required": [
+                                "phone"
+                            ]
+                        }
+                    }
+                ]
             },
             "MediaCollectionResource": {
                 "type": "object",
@@ -6111,6 +7844,36 @@
                     "verification_id"
                 ],
                 "title": "ResendPhoneOtpRequest"
+            },
+            "ResetPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "verification_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "code": {
+                        "type": "string",
+                        "pattern": "^[0-9]{6}$"
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 255
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "verification_id",
+                    "code",
+                    "password",
+                    "password_confirmation"
+                ],
+                "title": "ResetPasswordRequest"
             },
             "ServiceCollectionResource": {
                 "type": "object",
@@ -6726,6 +8489,68 @@
                 ],
                 "title": "UpdateMediaRequest"
             },
+            "UpdateProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "bio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "avatar_media_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "account_type": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "type": "string"
+                    },
+                    "verification_channel": {
+                        "type": "string"
+                    },
+                    "certification_status": {
+                        "type": "string"
+                    },
+                    "rating": {
+                        "type": "string"
+                    },
+                    "completed_jobs": {
+                        "type": "string"
+                    },
+                    "loyalty_points": {
+                        "type": "string"
+                    },
+                    "country_id": {
+                        "type": "string"
+                    },
+                    "location_id": {
+                        "type": "string"
+                    }
+                },
+                "title": "UpdateProfileRequest"
+            },
             "UpdateProviderServiceRequest": {
                 "type": "object",
                 "properties": {
@@ -6812,6 +8637,15 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "avatar_media_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "avatar_url": {
+                        "type": "null"
                     },
                     "customer_profile": {
                         "type": "object",
@@ -7016,6 +8850,9 @@
                                     "null"
                                 ]
                             },
+                            "certification_status": {
+                                "type": "string"
+                            },
                             "rating": {
                                 "type": "string"
                             },
@@ -7032,6 +8869,7 @@
                             "location_id",
                             "location",
                             "bio",
+                            "certification_status",
                             "rating",
                             "completed_jobs"
                         ]
@@ -7046,10 +8884,38 @@
                     "email_verified_at",
                     "verification_channel",
                     "roles",
+                    "avatar_media_id",
+                    "avatar_url",
                     "customer_profile",
                     "provider_profile"
                 ],
                 "title": "UserResource"
+            },
+            "VerifyContactRequest": {
+                "type": "object",
+                "properties": {
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "sms",
+                            "email"
+                        ]
+                    },
+                    "verification_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "code": {
+                        "type": "string",
+                        "pattern": "^[0-9]{6}$"
+                    }
+                },
+                "required": [
+                    "channel",
+                    "verification_id",
+                    "code"
+                ],
+                "title": "VerifyContactRequest"
             },
             "VerifyPhoneOtpRequest": {
                 "type": "object",

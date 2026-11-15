@@ -13,7 +13,7 @@ X-Locale: fr
 </code></pre>
 <p>Les langues disponibles sont fr, en et ln. Le fichier <code>openapi.json</code> est importable directement dans Postman : Import &gt; fichier ou URL du fichier OpenAPI de la documentation.</p>
 <h2>Authentification mobile et web</h2>
-<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register cree un compte en attente et retourne HTTP 202 avec data.verification_id, expires_in et resend_after, sans token. POST /auth/otp/verify confirme le contact choisi (SMS ou e-mail) et retourne un token dans data.token. Les connexions suivantes par POST /auth/login utilisent telephone + mot de passe et retournent un token si le contact choisi est deja verifie. Pour les routes protegees :</p>
+<p>L implementation actuelle utilise des tokens Bearer Sanctum, sur mobile comme sur le web. POST /auth/register cree un compte en attente et retourne HTTP 202 avec data.verification_id, expires_in et resend_after, sans token. POST /auth/otp/verify confirme le contact choisi (SMS ou e-mail) et retourne un token dans data.token. Les connexions suivantes par POST /auth/login utilisent telephone ou e-mail verifie + mot de passe et retournent un token si le contact choisi est deja verifie. Pour les routes protegees :</p>
 <pre><code class="language-http">Authorization: Bearer VOTRE_TOKEN
 Accept: application/json
 </code></pre>
@@ -38,7 +38,7 @@ Content-Type: application/json
 <p>Les comptes deja presents restent non verifies apres migration. Avec le bon mot de passe, POST /auth/login retourne HTTP 403, error_code=phone_verification_required (ou email_verification_required pour les nouvelles inscriptions par e-mail), data.channel et data.verification_id pour reprendre le parcours. Aucun token n est delivre avant verification. Les anciens tokens ne donnent pas acces aux routes metier protegees tant que le contact choisi n est pas verifie ; logout reste possible.</p>
 <p>Si l envoi echoue, HTTP 503 retourne verification_id lorsque le compte a ete cree. Le compte n est pas supprime : reprendre avec resend apres le delai indique. Un code perdu ou expire exige un renvoi.</p>
 <h2>Limites de connexion</h2>
-<p>POST /auth/login autorise 3 echecs par numero normalise + IP sur une fenetre de 15 minutes qui commence au premier echec. Les connexions reussies ne consomment pas ces essais. La quatrieme tentative est refusee jusqu a expiration de la fenetre, meme avec un mot de passe correct. Il existe aussi une limite de 30 requetes/minute par IP, tous numeros confondus.</p>
+<p>POST /auth/login autorise 3 echecs par compte + IP (telephone et e-mail partages) sur une fenetre de 15 minutes qui commence au premier echec. Les connexions reussies ne consomment pas ces essais. La quatrieme tentative est refusee jusqu a expiration de la fenetre, meme avec un mot de passe correct. Il existe aussi une limite de 30 requetes/minute par IP, tous numeros confondus.</p>
 <p>En cas de blocage : HTTP 429 avec success=false, message, retry_after et en-tete Retry-After. Attendre ce delai avant de reessayer. Les memes compteurs sont utilises par le mobile et le web. PostgreSQL est le stockage par defaut ; Redis est activable par configuration.</p>
 <h2>Comprendre les modules</h2>
 <table>
@@ -97,7 +97,7 @@ Content-Type: application/json
 <p>Pour les medias, utiliser multipart/form-data avec file, mediable_type, mediable_id et media_type. Une photo de profil doit etre une image. Les fichiers sont stockes sur le disque public ; la limite applicative actuelle est 500 Mo et depend aussi des limites PHP/serveur.</p>
 <p>Les erreurs 401 indiquent une authentification manquante ou invalide ; 403 une action interdite ; 422 une validation ou regle metier non respectee ; 429 un depassement des limites. Si Redis est configure puis inaccessible, une erreur de connexion Predis est rendue en 503.</p>
 <h2>Ce qui reste a construire</h2>
-<p>La documentation publiee ne deploie pas le backend. Les sessions SPA par cookies, la reinitialisation du mot de passe, les paiements, Horizon et la recherche geographique par distance ne sont pas encore exposes comme fonctionnalites completes. PostGIS est installe et teste ; cela ne signifie pas qu une route de recherche par rayon existe deja.</p>
+<p>La documentation publiee ne deploie pas le backend. Les sessions SPA par cookies, les paiements, Horizon et la recherche geographique par distance ne sont pas encore exposes comme fonctionnalites completes. PostGIS est installe et teste ; cela ne signifie pas qu une route de recherche par rayon existe deja.</p>
 <h2>Configurer Infobip et tester sans SMS reel</h2>
 <p>Par defaut, SMS_DRIVER=fake ne contacte aucun prestataire. En local, le dernier SMS de chaque verification est ecrit dans <code>.local/sms-outbox/&lt;verification_id&gt;.json</code>. Lire ce fichier prive pour recuperer le code, puis tester verify dans Postman. Ce dossier est ignore par Git. Les tests automatises capturent les messages en memoire. Le mode fake est refuse en production.</p>
 <p>Pour activer de vrais SMS, renseigner uniquement dans le .env prive :</p>
@@ -135,10 +135,96 @@ MAIL_TIMEOUT=10
   &quot;account_type&quot;: &quot;client&quot;
 }
 </code></pre>
-<p>La reponse 202 contient data.channel=email, verification_id, expires_in et resend_after. Copier le code a six chiffres affiche dans Mailtrap et appeler /auth/otp/verify avec verification_id et code (chaine). Le token recu permet /auth/me et les routes metier. email_verified_at est renseigne, phone_verified_at reste null. La connexion suivante utilise toujours telephone et mot de passe.</p>
+<p>La reponse 202 contient data.channel=email, verification_id, expires_in et resend_after. Copier le code a six chiffres affiche dans Mailtrap et appeler /auth/otp/verify avec verification_id et code (chaine). Le token recu permet /auth/me et les routes metier. email_verified_at est renseigne, phone_verified_at reste null. La connexion suivante accepte telephone ou e-mail verifie, avec le mot de passe.</p>
 <p>/auth/otp/resend utilise le canal enregistre lors de l inscription : aucun changement de canal ni de destinataire n est autorise par cette route. Les comptes existants gardent sms ; cette evolution ne confirme pas leurs contacts automatiquement. Les comptes ayant deja un numero doivent reprendre leur verification existante.</p>
 <p>Les limites et le stockage OTP optionnel Redis sont communs aux deux canaux : 5 minutes, 3 erreurs puis 15 minutes de blocage, renvoi apres 60 secondes, 3 envois/15 minutes par compte. L envoi est synchrone et ne necessite aucun worker. Une panne SMTP retourne 503 et conserve le compte en attente avec verification_id ; apres correction, reprendre avec resend sans recreer le compte. Les transports log/array/failover sont refuses pour les OTP e-mail afin de ne pas journaliser les codes ni annoncer un envoi fictif. Le message existe en HTML et texte, localise via X-Locale.</p>
 <p>En production, remplacer les identifiants du Sandbox par ceux d un service d envoi reel, avec un expediteur et un domaine autorises. Le Sandbox n est pas un service de livraison vers les utilisateurs.</p>
 <p>References : <a href="https://docs.mailtrap.io/email-sandbox/setup/sandbox-smtp-integration">integration SMTP Mailtrap</a>, <a href="https://docs.mailtrap.io/getting-started/email-sandbox">Email Sandbox</a>.</p>
 <p>Le stockage OTP est maintenant Redis par defaut (OTP_CACHE_STORE=otp, base 3), pour les SMS comme pour les e-mails. Les comptes, les validations et les tokens Sanctum restent en PostgreSQL. Redis indisponible implique un refus temporaire HTTP 503, sans basculement silencieux. Les anciens codes PostgreSQL ne sont pas transferes ; demander un nouveau code apres le changement de stockage. Voir le <a href="redis.md">guide Redis</a>.</p>
+<h2>Profil prive et recuperation du compte</h2>
+<p>Toutes les routes ci-dessous utilisent le prefixe /api/mboka-services/v1. Les routes protegees exigent le Bearer Sanctum et une inscription deja verifiee. Elles ne permettent de gerer que le compte connecte.</p>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Utilisation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET /auth/profile</td>
+<td>Profil prive complet (egalement disponible dans /auth/me)</td>
+</tr>
+<tr>
+<td>PATCH /auth/profile</td>
+<td>name, bio prestataire (500 caracteres max), avatar_media_id ou null</td>
+</tr>
+<tr>
+<td>POST /auth/profile/contact-change</td>
+<td>Demander un OTP au nouveau contact, avec le mot de passe actuel</td>
+</tr>
+<tr>
+<td>POST /auth/profile/contact-change/verify</td>
+<td>Confirmer le nouveau contact</td>
+</tr>
+<tr>
+<td>PUT /auth/password</td>
+<td>Changer le mot de passe avec current_password</td>
+</tr>
+<tr>
+<td>POST /auth/password/forgot</td>
+<td>Recuperation publique par un contact deja verifie</td>
+</tr>
+<tr>
+<td>POST /auth/password/reset</td>
+<td>Nouveau mot de passe avec le code de recuperation</td>
+</tr>
+<tr>
+<td>GET /auth/devices</td>
+<td>Lister ses tokens appareils sans leurs valeurs ni empreintes</td>
+</tr>
+<tr>
+<td>DELETE /auth/devices/others</td>
+<td>Deconnecter les autres appareils</td>
+</tr>
+<tr>
+<td>DELETE /auth/devices/{device}</td>
+<td>Revoquer un token appartenant au compte</td>
+</tr>
+<tr>
+<td>POST /auth/logout-all</td>
+<td>Deconnecter tous les appareils, y compris l appareil courant</td>
+</tr>
+</tbody>
+</table>
+<h3>Modifier le profil et la photo</h3>
+<p>PATCH /auth/profile accepte par exemple {&quot;name&quot;:&quot;Jean Client&quot;}, ou {&quot;bio&quot;:&quot;Electricien a Kinshasa&quot;} pour un prestataire. Le nom est synchronise avec les profils client/prestataire. Les roles, points, notes, nombre de travaux et certifications sont proteges ; email, phone et password ne sont pas acceptes sur cette route. Le pays est celui choisi a l inscription ; les adresses restent gerees via /locations, et un changement de pays n est pas ajoute par ce module.</p>
+<p>Pour une photo : envoyer d abord une image via POST /medias avec media_type=profile et le profil comme cible, puis PATCH /auth/profile avec {&quot;avatar_media_id&quot;:ID_DU_MEDIA}. Seule une image de profil appartenant au compte est acceptee. null retire la selection sans supprimer le fichier ; supprimer le media via /medias retire automatiquement la selection. avatar_url apparait dans la reponse utilisateur. Les portfolios utilisent toujours le module medias existant.</p>
+<h3>Changer ou verifier un contact secondaire</h3>
+<p>POST /auth/profile/contact-change :</p>
+<pre><code class="language-json">{&quot;channel&quot;:&quot;email&quot;,&quot;value&quot;:&quot;nouveau@example.test&quot;,&quot;current_password&quot;:&quot;MOT_DE_PASSE_ACTUEL&quot;}
+</code></pre>
+<p>Pour un telephone, utiliser channel=sms et value au format international (le format local est normalise avec le pays du profil). Le contact actuel et son statut restent inchanges jusqu a validation. Le meme endpoint permet de confirmer un contact secondaire actuel qui n etait pas encore verifie.</p>
+<p>POST /auth/profile/contact-change/verify :</p>
+<pre><code class="language-json">{&quot;channel&quot;:&quot;email&quot;,&quot;verification_id&quot;:&quot;UUID_RECU&quot;,&quot;code&quot;:&quot;123456&quot;}
+</code></pre>
+<p>Le code confirme seulement ce contact, sur ce compte. Il ne confirme pas l autre contact. Le changement ne modifie pas verification_channel choisi lors de l inscription. Un contact deja utilise par un autre compte est refuse, y compris si l autre compte l utilise apres la demande mais avant la confirmation. Les adresses e-mail sont normalisees en minuscules et leur unicite est protegee par un index PostgreSQL insensible a la casse.</p>
+<p>Apres confirmation, tous les tokens sont revoques et data.reauthentication_required=true : se reconnecter via /auth/login avec le numero actuel ou l e-mail verifie, et le mot de passe. En cas de panne d envoi : 503, aucun changement applique. Pour renvoyer, repeter contact-change apres 60 secondes avec le mot de passe actuel.</p>
+<h3>Mot de passe oublie</h3>
+<p>POST /auth/password/forgot (sans Bearer) :</p>
+<pre><code class="language-json">{&quot;phone&quot;:&quot;+243999000123&quot;,&quot;channel&quot;:&quot;email&quot;}
+</code></pre>
+<p>Le telephone local peut etre accompagne de country_id. On peut aussi identifier le compte directement par email, sans telephone. L envoi utilise exclusivement l e-mail deja verifie du compte (ou le telephone deja verifie si channel=sms), jamais une adresse fournie comme nouveau destinataire. Un compte dont aucun contact n est verifie doit d abord terminer son inscription.</p>
+<p>HTTP 202 retourne success, message generique, verification_id opaque, channel, expires_in=300 et resend_after=60. La reponse a le meme format pour un compte inconnu, un contact non verifie, un quota compte atteint ou un echec d envoi : elle ne garantit pas qu un message est parti. Une panne du stockage OTP retourne 503 pour tous les comptes. Pour un renvoi, repeter la meme requete apres le delai ; conserver le nouveau verification_id. Les anciens identifiants deviennent invalides si un nouveau code est effectivement emis.</p>
+<p>POST /auth/password/reset :</p>
+<pre><code class="language-json">{&quot;verification_id&quot;:&quot;UUID_RECU&quot;,&quot;code&quot;:&quot;123456&quot;,&quot;password&quot;:&quot;NOUVEAU_MOT_DE_PASSE&quot;,&quot;password_confirmation&quot;:&quot;NOUVEAU_MOT_DE_PASSE&quot;}
+</code></pre>
+<p>Le nouveau mot de passe doit contenir au moins 8 caracteres. Le succes ne connecte pas automatiquement : il revoque tous les tokens, retourne reauthentication_required=true et exige /auth/login. Le code est utilisable une seule fois et aucun contact non verifie ne devient verifie. Pour changer le mot de passe en etant connecte, PUT /auth/password avec current_password, password et password_confirmation ; la meme reconnexion est ensuite requise.</p>
+<h3>Protection et stockage</h3>
+<p>Les OTP de recuperation et de contact sont separes des codes d inscription, lies au compte, au destinataire et a leur usage. Redis est le stockage temporaire par defaut ; OTP_CACHE_STORE=database reste un retour explicite possible. Seules des empreintes de codes sont stockees, jamais les mots de passe proposes ni les codes en clair. Les codes sont invalides apres 5 minutes. Trois erreurs bloquent 15 minutes ; les renvois ne remettent pas les echecs a zero. Maximum 3 envois par compte et par usage sur 15 minutes (tous canaux et IP confondus pour la recuperation). Les quotas peuvent survivre a une validation, sans conserver de code utilisable.</p>
+<p>Les demandes partagent le limiteur IP OTP existant (10 demandes/15 minutes), et les verifications partagent 30 requetes/minute/IP. Les routes demandant le mot de passe actuel sont limitees a 3 reponses 422 par compte+IP sur 15 minutes, plus 30 requetes/minute/IP. Une reponse 429 contient Retry-After. Les mots de passe et tokens restent dans PostgreSQL ; /devices represente les tokens Sanctum, pas des sessions SPA. Leur duree d expiration n est pas modifiee par cette fonctionnalite.</p>
+<p>Les e-mails de securite ont un objet et un contenu specifiques (recuperation ou confirmation de contact). Le meme SMTP Mailtrap Sandbox est utilise en developpement ; les tests automatises ne contactent ni Mailtrap ni Infobip. Les migrations ajoutent uniquement la reference de photo et l index d unicite d e-mail, sans confirmer de contact ni supprimer de compte. Un serveur ayant deja des e-mails dupliques, sans tenir compte de la casse, doit les faire corriger avant d appliquer l index.</p>
+<h3>Connexion et recuperation directement par e-mail</h3>
+<p>POST /auth/login accepte exactement un identifiant : {&quot;email&quot;:&quot;<a href="mailto:client@example.test">client@example.test</a>&quot;,&quot;password&quot;:&quot;MOT_DE_PASSE&quot;} ou {&quot;phone&quot;:&quot;+243999000123&quot;,&quot;password&quot;:&quot;MOT_DE_PASSE&quot;}. Ne pas fournir les deux. L e-mail est normalise en minuscules et doit etre verifie pour servir a la connexion ; une inscription encore en attente retourne toujours son erreur de verification. Les 3 echecs/15 minutes par compte+IP sont partages entre son telephone et son e-mail pour eviter de contourner la limite en alternant les identifiants. La limite globale reste 30 requetes/minute/IP.</p>
+<p>POST /auth/password/forgot accepte {&quot;email&quot;:&quot;<a href="mailto:client@example.test">client@example.test</a>&quot;} sans telephone : le canal par defaut devient email. Avec un telephone seul, le canal par defaut devient sms. channel peut etre indique explicitement pour choisir un autre contact deja verifie du meme compte. La reponse generique et /auth/password/reset restent identiques. Les deux identifiants fournis ensemble sont refuses.</p>
 </main></body></html>
