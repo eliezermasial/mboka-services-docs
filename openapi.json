@@ -11475,6 +11475,547 @@
                     }
                 ]
             }
+        },
+        "/notification-presence": {
+            "put": {
+                "operationId": "v1.web-notifications.presence",
+                "summary": "Signale un onglet web ouvert, y compris en arriere-plan",
+                "tags": [
+                    "WebNotification"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebPresenceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Onglet web ouvert, y compris en arriere-plan.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "heartbeat_seconds": {
+                                                    "type": "integer",
+                                                    "const": 60
+                                                },
+                                                "presence_seconds": {
+                                                    "type": "integer",
+                                                    "const": 180
+                                                }
+                                            },
+                                            "required": [
+                                                "heartbeat_seconds",
+                                                "presence_seconds"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "Bearer Sanctum du compte. Un UUID distinct par onglet ; signal toutes les 60 secondes meme en arriere-plan. Repousse les alertes externes de dix minutes. Maximum 120 signaux/minute.",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/notification-presence/{tab}": {
+            "delete": {
+                "operationId": "v1.web-notifications.close",
+                "summary": "Ferme le signal de presence de cet onglet et de cette session uniquement",
+                "tags": [
+                    "WebNotification"
+                ],
+                "parameters": [
+                    {
+                        "name": "tab",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signal de cet onglet et de cette session retire.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "success"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/web-push/config": {
+            "get": {
+                "operationId": "v1.web-notifications.config",
+                "summary": "Retourne la cle VAPID publique a utiliser par le navigateur",
+                "tags": [
+                    "WebNotification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Configuration publique uniquement.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "public_key": {
+                                                    "type": "string"
+                                                },
+                                                "web_push_ready": {
+                                                    "type": "boolean"
+                                                },
+                                                "delay_minutes": {
+                                                    "type": "integer",
+                                                    "const": 10
+                                                }
+                                            },
+                                            "required": [
+                                                "public_key",
+                                                "web_push_ready",
+                                                "delay_minutes"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/web-push/subscriptions": {
+            "post": {
+                "operationId": "v1.web-notifications.store",
+                "summary": "Enregistre un abonnement Web Push et sa preuve d'installation",
+                "tags": [
+                    "WebNotification"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreWebPushRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Abonnement enregistre, aucun endpoint ni secret retourne.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "browser_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "enabled": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "browser_id",
+                                                "enabled"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "409": {
+                        "description": "Preuve navigateur manquante/incorrecte ou endpoint deja lie ailleurs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "Abonnement navigateur chiffre, cinq maximum par compte. browser_secret est une preuve de 32 octets aleatoires encodee en 64 caracteres hexadecimaux, conservee par le frontend. Un changement de compte exige cette preuve. Abonnement conserve au logout. Endpoint HTTPS chez un fournisseur autorise ; aes128gcm uniquement. Maximum 30 inscriptions/minute.",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/web-push/subscriptions/{browser}": {
+            "delete": {
+                "operationId": "v1.web-notifications.destroy",
+                "summary": "Retire un abonnement Web Push appartenant au compte connecte",
+                "tags": [
+                    "WebNotification"
+                ],
+                "parameters": [
+                    {
+                        "name": "browser",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Abonnement du compte retire.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "success"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Abonnement introuvable ou appartenant a un autre compte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -14772,6 +15313,55 @@
                     }
                 ]
             },
+            "StoreWebPushRequest": {
+                "type": "object",
+                "properties": {
+                    "browser_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "browser_secret": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "endpoint": {
+                        "type": "string",
+                        "maxLength": 2048
+                    },
+                    "keys": {
+                        "type": "object",
+                        "properties": {
+                            "p256dh": {
+                                "type": "string",
+                                "maxLength": 88
+                            },
+                            "auth": {
+                                "type": "string",
+                                "maxLength": 24
+                            }
+                        },
+                        "required": [
+                            "p256dh",
+                            "auth"
+                        ]
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "fr",
+                            "en",
+                            "ln"
+                        ]
+                    }
+                },
+                "required": [
+                    "browser_id",
+                    "browser_secret",
+                    "endpoint",
+                    "keys"
+                ],
+                "title": "StoreWebPushRequest"
+            },
             "UpdateCategoryRequest": {
                 "type": "object",
                 "properties": {
@@ -15450,6 +16040,19 @@
                     "code"
                 ],
                 "title": "VerifyPhoneOtpRequest"
+            },
+            "WebPresenceRequest": {
+                "type": "object",
+                "properties": {
+                    "tab_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "required": [
+                    "tab_id"
+                ],
+                "title": "WebPresenceRequest"
             },
             "PushDevice": {
                 "type": "object",
