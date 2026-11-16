@@ -45,4 +45,5 @@ php artisan migrate
 <h2>Etape spatiale suivante</h2>
 <p>Les colonnes latitude et longitude existent deja. PostGIS est active et un test verifie une recherche de proximite en metres. L'ajout d'un point geography(Point,4326), d'un index GiST et d'une route de recherche par distance reste une evolution distincte.</p>
 <p>Sources : <a href="https://www.postgresql.org/download/windows/">PostgreSQL Windows</a>, <a href="https://postgis.net/documentation/getting_started/install_windows/released_versions/">PostGIS Windows</a>, <a href="https://postgis.net/documentation/getting_started/">activation PostGIS</a>.</p>
+<p>Les connexions Laravel PostgreSQL imposent le fuseau de session UTC, identique au fuseau applicatif. Cela évite que les dates des files persistantes et des reçus Expo dépendent du fuseau du serveur local ou de production. Les dates transmises par les clients restent à fournir avec leur décalage explicite.</p>
 </main></body></html>

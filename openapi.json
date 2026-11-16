@@ -9405,6 +9405,459 @@
                 "description": "Administrateur uniquement. hide ferme la publication et ses fichiers au public ; restore rend la publication en draft, sans publication automatique. L auteur reste seul responsable de la nouvelle confirmation."
             }
         },
+        "/push-devices": {
+            "get": {
+                "operationId": "v1.push-devices.index",
+                "summary": "Liste les installations push du compte, sans exposer leurs tokens",
+                "tags": [
+                    "PushDevice"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installations du compte sans tokens ni empreintes.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "devices": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "installation_id": {
+                                                                "type": "string",
+                                                                "format": "uuid"
+                                                            },
+                                                            "platform": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "android",
+                                                                    "ios"
+                                                                ]
+                                                            },
+                                                            "locale": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "fr",
+                                                                    "en",
+                                                                    "ln"
+                                                                ]
+                                                            },
+                                                            "enabled": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "last_registered_at": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "installation_id",
+                                                            "platform",
+                                                            "locale",
+                                                            "enabled",
+                                                            "last_registered_at"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "devices"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "v1.push-devices.store",
+                "summary": "Enregistre ou actualise une installation Android/iOS pour la session Sanctum courante",
+                "tags": [
+                    "PushDevice"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "installation_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "expo_push_token": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "pattern": "^(Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{10,200}\\]$"
+                                    },
+                                    "platform": {
+                                        "type": "string",
+                                        "enum": [
+                                            "android",
+                                            "ios"
+                                        ]
+                                    },
+                                    "locale": {
+                                        "type": "string",
+                                        "enum": [
+                                            "fr",
+                                            "en",
+                                            "ln"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "installation_id",
+                                    "expo_push_token",
+                                    "platform"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Installation liee a la session Sanctum courante.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "device": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "installation_id": {
+                                                            "type": "string",
+                                                            "format": "uuid"
+                                                        },
+                                                        "platform": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "android",
+                                                                "ios"
+                                                            ]
+                                                        },
+                                                        "locale": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "fr",
+                                                                "en",
+                                                                "ln"
+                                                            ]
+                                                        },
+                                                        "enabled": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "last_registered_at": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "installation_id",
+                                                        "platform",
+                                                        "locale",
+                                                        "enabled",
+                                                        "last_registered_at"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "device"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "409": {
+                        "description": "Installation ou token deja associe ailleurs. Se deconnecter avant de changer de compte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 30 inscriptions par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/push-devices/{installation}": {
+            "delete": {
+                "operationId": "v1.push-devices.destroy",
+                "summary": "Retire une installation appartenant au compte connecte",
+                "tags": [
+                    "PushDevice"
+                ],
+                "parameters": [
+                    {
+                        "name": "installation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installation retiree.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "success"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "description": "Installation introuvable ou appartenant a un autre compte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/auth/otp/verify": {
             "post": {
                 "operationId": "v1.auth.otp.verify",
@@ -14095,6 +14548,41 @@
                 "title": "StorePublicationRequest",
                 "description": "Brouillon uniquement. Un client doit fournir sa propre intervention terminee ; provider/service/auteur sont derives. Un prestataire publie sur son propre profil, avec service approuve facultatif ou sa propre intervention terminee."
             },
+            "StorePushDeviceRequest": {
+                "type": "object",
+                "properties": {
+                    "installation_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "expo_push_token": {
+                        "type": "string",
+                        "pattern": "^(Expo|Exponent)PushToken\\[[A-Za-z0-9_-]{10,200}\\]$",
+                        "maxLength": 255
+                    },
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "android",
+                            "ios"
+                        ]
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "fr",
+                            "en",
+                            "ln"
+                        ]
+                    }
+                },
+                "required": [
+                    "installation_id",
+                    "expo_push_token",
+                    "platform"
+                ],
+                "title": "StorePushDeviceRequest"
+            },
             "StoreServiceRequest": {
                 "type": "object",
                 "properties": {
@@ -14962,6 +15450,44 @@
                     "code"
                 ],
                 "title": "VerifyPhoneOtpRequest"
+            },
+            "PushDevice": {
+                "type": "object",
+                "properties": {
+                    "installation_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "android",
+                            "ios"
+                        ]
+                    },
+                    "locale": {
+                        "type": "string",
+                        "enum": [
+                            "fr",
+                            "en",
+                            "ln"
+                        ]
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "last_registered_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "installation_id",
+                    "platform",
+                    "locale",
+                    "enabled",
+                    "last_registered_at"
+                ]
             }
         },
         "responses": {
