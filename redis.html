@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style.css"><title>Mboka &middot; redis</title><body><header><a class="brand" href="index.html">Mboka <span>Services / Docs</span></a><nav><a href="index.html">Accueil</a><a href="api.html">Reference API</a></nav></header><main class="guide"><h1>Redis optionnel</h1>
-<p>Redis est maintenant active par defaut pour les OTP SMS et e-mail (OTP_CACHE_STORE=otp, base 3). Le cache general, les sessions configurees et les compteurs de connexion utilisent toujours PostgreSQL. Les comptes et les tokens Sanctum restent dans PostgreSQL. Redis doit etre demarre avant les inscriptions et les verifications OTP.</p>
+<p>Redis est maintenant active par defaut pour les OTP SMS et e-mail (OTP_CACHE_STORE=otp, base 3). Le cache general, les sessions configurees et les compteurs de connexion utilisent toujours PostgreSQL. Les comptes et les tokens Sanctum restent dans PostgreSQL. Redis doit etre demarre avant les inscriptions, les verifications OTP et la diffusion en temps reel Reverb (file broadcasts en base 4).</p>
 <p>Le client PHP <code>predis/predis</code> est fourni par Composer : aucune extension PHP Redis n'est necessaire, y compris sur Windows. Le serveur deja fourni par Laragon est utilise en local, sans Docker. Horizon reste absent.</p>
 <h2>Revenir explicitement a un fonctionnement sans Redis</h2>
 <pre><code class="language-dotenv">OTP_CACHE_STORE=database
@@ -7,6 +7,7 @@ CACHE_STORE=database
 CACHE_LIMITER=database
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
+BROADCAST_QUEUE_CONNECTION=database
 </code></pre>
 <h2>Activer Redis pour les compteurs de connexion seulement</h2>
 <p>Une fois un serveur Redis accessible :</p>
@@ -49,7 +50,7 @@ Illuminate\Support\Facades\Redis::connection('sessions')-&gt;ping();
 <p>La suite standard ne necessite pas Redis. Elle utilise une base PostgreSQL de test dediee et un cache en memoire pour l'isolation, avec un test specifique des compteurs PostgreSQL et un test de panne Redis simulee. La selection du client Predis et la separation cache/sessions sont egalement verifiees sans serveur Redis.</p>
 <pre><code class="language-sh">php vendor/phpunit/phpunit/phpunit --do-not-cache-result
 </code></pre>
-<p>Horizon reste une evolution ulterieure. Les queues conservent leur stockage PostgreSQL par defaut.</p>
+<p>Horizon reste une evolution ulterieure. Les queues generales conservent leur stockage PostgreSQL par defaut ; seule la file de diffusion Reverb utilise Redis via la connexion redis-broadcasts.</p>
 <h2>Stockage OTP optionnel</h2>
 <p>OTP_CACHE_STORE=otp conserve maintenant l empreinte du code, les echeances et les compteurs dans Redis. Cette valeur est preparee dans .env.example et utilisee par defaut dans config/otp.php :</p>
 <pre><code class="language-dotenv">OTP_CACHE_STORE=otp
@@ -69,4 +70,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/redis.ps1 stop
 <p>La version Redis embarquee dans cet ancien Laragon sert uniquement au developpement local. En production, utiliser un serveur Redis maintenu, avec authentification, reseau prive et TLS selon l hebergeur, et les variables REDIS_* correspondantes.</p>
 <p>Le code expire au bout de 5 minutes, mais l entree Redis peut durer plus longtemps (par exemple environ 16 minutes) pour conserver les quotas d envoi et les blocages. Une validation reussie supprime immediatement l entree ; sinon Redis la supprime automatiquement au terme du TTL. Un redemarrage non propre peut perdre les dernieres ecritures AOF non synchronisees. Les codes et compteurs du stockage PostgreSQL precedent ne sont pas transferes : les comptes en attente doivent demander un nouveau code sur /auth/otp/resend.</p>
 <p>Les OTP de recuperation du compte et de changement de contact utilisent egalement le store OTP dedie. Ils disposent de cles separees par compte et par usage et ne peuvent pas servir a valider une inscription. Les compteurs restent presents jusqu a leur TTL apres succes, mais les empreintes et correspondances des codes utilisables sont invalidees. Les mots de passe proposes ne sont jamais stockes dans Redis. Le mot de passe final hache et les tokens restent en PostgreSQL. Les verrous de ligne utilisateur serialisent connexion, modification des contacts et changements de mot de passe.</p>
+<h2>File Reverb sur Redis</h2>
+<p>BROADCAST_CONNECTION=reverb reste le transport WebSocket. BROADCAST_QUEUE_CONNECTION=redis-broadcasts selectionne la file Redis dediee (connexion Redis broadcasts, REDIS_BROADCAST_DB=4, REDIS_BROADCAST_URL facultatif). Cette base est distincte du cache (1), des sessions (2) et des OTP (3). Ne pas utiliser un vidage global FLUSHALL pour vider le cache.</p>
+<p>Lancer Redis puis <code>php artisan reverb:start</code> et <code>php artisan queue:work redis-broadcasts --queue=broadcasts --tries=5 --timeout=30</code>. Les transactions annulees ne diffusent pas d evenements ; les echecs de diffusion sont reessayes puis conserves dans failed_jobs PostgreSQL. Si Redis est indisponible avant l ajout du job, le message reste enregistre, l erreur est journalisee et le rattrapage HTTP retrouve le message : aucun basculement automatique ni re-envoi automatique de cet evenement non mis en file.</p>
+<p>Pour un retour explicite a la file PostgreSQL, definir BROADCAST_QUEUE_CONNECTION=database, vider le cache de configuration et lancer le worker database --queue=broadcasts. Drainer aussi l ancienne file avec son worker pour ne pas abandonner les evenements en attente ; changer la configuration ne transfere pas les jobs. REVERB_SCALING_ENABLED reste false sur une instance.</p>
 </main></body></html>

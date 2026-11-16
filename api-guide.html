@@ -298,7 +298,7 @@ MAIL_TIMEOUT=10
 <h3>Echanger des messages et des fichiers</h3>
 <ul>
 <li>GET /conversations/{conversation}/messages : historique, du plus recent au plus ancien, 30 messages par page (per_page de 1 a 100).</li>
-<li>GET avec after_id=ID : messages plus recents que cet identifiant, en ordre croissant. Utile pour interroger regulierement depuis React ou React Native. Il n y a pas encore de WebSocket ni de notification push externe.</li>
+<li>GET avec after_id=ID : messages plus recents que cet identifiant, en ordre croissant. Utile pour le rattrapage HTTP depuis React ou React Native, en complément des événements WebSocket Reverb. Les notifications push externes ne sont pas implémentées.</li>
 <li>POST sur la meme route : body (5000 caracteres maximum), files[], ou les deux. Pour des fichiers utiliser multipart/form-data. Maximum 5 fichiers par message : photos 10 Mo et videos 100 Mo, formats JPEG/PNG/WebP/GIF/MP4/MOV/WebM. Au moins du texte ou un fichier est obligatoire.</li>
 <li>PATCH /conversations/{conversation}/read avec {&quot;last_message_id&quot;:ID} : marquer les messages comme lus. L identifiant doit appartenir a cette conversation et le compteur ne recule pas.</li>
 </ul>
@@ -336,4 +336,54 @@ MAIL_TIMEOUT=10
 <p>La migration conserve les statuts et dates existants et cree les conversations des demandes deja affectees. Aucun prix historique n est invente. agreement.legacy=true identifie une ancienne demande sans proposition enregistree. Une ancienne intervention deja accepted ou in_progress peut continuer, mais toute nouvelle declaration de fin attend desormais la confirmation du client. Les anciens dossiers completed restent termines.</p>
 <p>Pour les anciennes pieces jointes stockees sur le disque public, executer d abord php artisan media:privatize-interventions --dry-run, puis sans --dry-run. La commande copie, compare les empreintes et bascule le media avant de retirer la copie publique apres validation. Elle est repetable, refuse les chemins non reconnus et ne remplace pas une copie privee differente. En cas d erreur, corriger le fichier concerne et relancer ; les sources ne sont pas supprimees avant verification. Le retrait d une URL publique ne peut pas rappeler des copies deja telechargees.</p>
 <p>La migration ne supprime aucun message ni ancienne demande. Son retour arriere est refuse si des messages, propositions, problemes, nouveaux statuts ou fichiers prives necessitent une reprise explicite des donnees.</p>
+<h2>Messagerie en temps réel : Laravel Reverb</h2>
+<p>Les messages, accords et notifications restent enregistrés dans PostgreSQL. Laravel Reverb signale les nouveaux messages (y compris les événements système : proposition, confirmation, changement de statut) et les lectures après validation de la transaction. Une annulation SQL ne diffuse aucun événement. La file de diffusion utilise la connexion redis-broadcasts et la queue broadcasts, dans Redis base 4 (REDIS_BROADCAST_DB). Redis est donc requis pour la diffusion instantanée. Les autres queues gardent leur configuration existante ; Horizon reste absent. La synchronisation multi-serveurs Reverb reste désactivée.</p>
+<h3>Démarrer en local sans Docker</h3>
+<p>Configurer REVERB_APP_ID, REVERB_APP_KEY et REVERB_APP_SECRET avec des valeurs locales aléatoires ; ne jamais transmettre le secret au frontend. Le fichier .env local a été configuré, avec BROADCAST_QUEUE_CONNECTION=redis-broadcasts et REDIS_BROADCAST_DB=4. REDIS_BROADCAST_URL permet une URL dédiée en production ; une base dans cette URL prend priorité sur REDIS_BROADCAST_DB. Utiliser BROADCAST_CONNECTION=reverb, REVERB_HOST=127.0.0.1, REVERB_PORT=18080, REVERB_SCHEME=http. REVERB_SERVER_HOST/PORT indiquent l'adresse d'écoute ; REVERB_HOST/PORT indiquent où Laravel joint le serveur. REVERB_ALLOWED_ORIGINS contient des noms d'hôtes séparés par des virgules (localhost,127.0.0.1 en local). Le serveur refuse les événements client directs : les messages doivent passer par l'API.</p>
+<p>Dans trois terminaux, depuis le projet :</p>
+<pre><code class="language-shell">php artisan serve --host=0.0.0.0 --port=8000
+php artisan reverb:start
+php artisan queue:work redis-broadcasts --queue=broadcasts --tries=5 --timeout=30
+</code></pre>
+<p>Conserver aussi les processus habituels PostgreSQL/Redis pour les fonctionnalités qui en ont besoin, et le planificateur des interventions. Un arrêt de Reverb laisse les messages persistés : la file réessaie la diffusion puis place les échecs dans failed_jobs après épuisement ; utiliser php artisan queue:retry all après rétablissement, et toujours resynchroniser par HTTP. Après modification de configuration : php artisan config:clear, php artisan reverb:restart et php artisan queue:restart.</p>
+<h3>Contrat React / React Native</h3>
+<ol>
+<li>Ouvrir une connexion compatible Pusher à Reverb, avec la clé publique REVERB_APP_KEY.</li>
+<li>Autoriser le canal via POST /api/mboka-services/v1/broadcasting/auth, JSON socket_id et channel_name=private-conversations.{id}, Authorization: Bearer &lt;token Sanctum&gt;, Accept: application/json. Ce token est celui de l'utilisateur connecté, pas le secret Reverb.</li>
+<li>Avec Laravel Echo, s'abonner à echo.private('conversations.' + id).listen('.conversation.updated', callback).</li>
+<li>Le payload contient conversation_id, service_request_id, type (message.created ou messages.read), message_id et reader_id (nullable). Il ne contient ni texte, ni fichier, ni adresse privée. Recharger les messages depuis GET /conversations/{id}/messages?after_id={dernier_id} et l'état de la demande depuis l'API ; pour messages.read, recharger les conversations pour leurs compteurs/accusés. Parcourir les pages de rattrapage jusqu'à épuisement, dédupliquer les messages par id.</li>
+<li>Après chaque reconnexion et chaque abonnement réussi, refaire le rattrapage HTTP. La livraison WebSocket n'est pas une garantie de réception et peut être dupliquée ou retardée.</li>
+</ol>
+<p>Exemple côté React avec laravel-echo et pusher-js (adaptateur WebSocket compatible requis sur React Native) :</p>
+<pre><code class="language-js">import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+const echo = new Echo({
+  broadcaster: 'reverb', Pusher,
+  key: reverbPublicKey,
+  wsHost: '127.0.0.1', wsPort: 18080, wssPort: 443,
+  forceTLS: false, enabledTransports: ['ws', 'wss'],
+  authorizer: channel =&gt; ({
+    authorize: async (socketId, callback) =&gt; {
+      try {
+        const response = await fetch(apiBase + '/broadcasting/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ socket_id: socketId, channel_name: channel.name }),
+        });
+        if (!response.ok) throw new Error('Canal non autorisé');
+        callback(null, await response.json());
+      } catch (error) { callback(error, null); }
+    },
+  }),
+});
+echo.private('conversations.' + conversationId)
+  .listen('.conversation.updated', event =&gt; synchronizeFromApi(event));
+// À la fermeture de l'écran / déconnexion :
+// echo.leave('conversations.' + conversationId); echo.disconnect();
+</code></pre>
+<p>Sur téléphone réel, 127.0.0.1 désigne le téléphone : utiliser l'IP LAN du PC, rendre Reverb accessible sur cette interface (REVERB_SERVER_HOST), configurer les origines attendues et le pare-feu local. Ne pas exposer le secret. L'API doit aussi être joignable depuis le téléphone.</p>
+<p>Seuls les participants autorisés et les administrateurs peuvent s'abonner à la conversation courante. Un changement de prestataire crée une autre conversation ; les anciens canaux n'acceptent plus d'abonnements et les événements encore en attente sont ignorés à l'exécution. Une socket déjà abonnée à l'ancien canal n'est pas déconnectée de force, mais aucun nouveau contenu n'y est diffusé. Les accès HTTP restent réévalués pour chaque requête, même après expiration/révocation d'un token.</p>
+<p>En production : domaine WebSocket en WSS derrière un reverse proxy TLS, origines explicites, secrets distincts, serveur Reverb et worker supervisés, port interne non public. REVERB_SCALING_ENABLED=false pour une instance ; Redis devient nécessaire si l'on active la diffusion multi-instances. La clé publique, l'hôte et le port publics du frontend peuvent différer de l'adresse interne utilisée par Laravel.</p>
+<p>Si l’enregistrement du job de diffusion échoue, Laravel journalise l’erreur sans invalider le message déjà enregistré ; le rattrapage HTTP permet de le récupérer. Les événements de lecture contiennent le dernier identifiant lu ; la liste des conversations expose aussi client_read_message_id et provider_read_message_id.</p>
+<p>Si des événements attendent déjà dans l’ancienne file PostgreSQL, la vider avec <code>php artisan queue:work database --queue=broadcasts --stop-when-empty --tries=5 --timeout=30</code> pendant que Reverb fonctionne. Le changement de connexion ne déplace pas ces jobs dans Redis. Cette commande traite uniquement la file broadcasts ; conserver le worker Redis pour les nouveaux événements.</p>
 </main></body></html>
