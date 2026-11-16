@@ -2022,6 +2022,775 @@
                 ]
             }
         },
+        "/service-requests/{service_request}/conversations": {
+            "get": {
+                "operationId": "v1.interventions.conversations",
+                "tags": [
+                    "Conversation"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ConversationCollectionResource"
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/conversations/{conversation}/messages": {
+            "get": {
+                "operationId": "v1.conversations.messages",
+                "summary": "Historique recent, ou nouveaux messages avec after_id",
+                "tags": [
+                    "Conversation"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "after_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageCollectionResource"
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Participants autorises, historique recent en ordre decroissant. after_id donne les nouveaux messages en ordre croissant, per_page 1-100 (30 par defaut). HTTP et interrogation periodique, sans WebSocket. Anciennes conversations accessibles seulement au client et aux administrateurs apres changement de prestataire."
+            },
+            "post": {
+                "operationId": "v1.conversations.send",
+                "tags": [
+                    "Conversation"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendMessageRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "$ref": "#/components/schemas/MessageResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/conversations/{conversation}/read": {
+            "patch": {
+                "operationId": "v1.conversations.read",
+                "tags": [
+                    "Conversation"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "last_message_id": {
+                                        "type": "integer",
+                                        "minimum": 1
+                                    }
+                                },
+                                "required": [
+                                    "last_message_id"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "conversation": {
+                                                    "$ref": "#/components/schemas/ConversationResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "conversation"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/conversations/{conversation}/files/{media}": {
+            "get": {
+                "operationId": "v1.conversations.files",
+                "tags": [
+                    "Conversation"
+                ],
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "media",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "Range",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "bytes=0-1023"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "206": {
+                        "description": "Plage demandee.",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Fichier prive. Bearer obligatoire sur cette requete aussi. Controle du dossier et de la conversation, sans chemin de stockage public. Cache-Control private/no-store, lecture par plages pour les videos."
+            }
+        },
         "/countries": {
             "get": {
                 "operationId": "v1.countries.index",
@@ -2568,6 +3337,1378 @@
                         }
                     }
                 ]
+            }
+        },
+        "/intervention-follow-ups": {
+            "get": {
+                "operationId": "v1.interventions.follow-ups",
+                "summary": "Suivi administrateur des problemes ou confirmations sans reponse",
+                "tags": [
+                    "Intervention"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ServiceRequestCollectionResource"
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/service-requests/{service_request}/proposals": {
+            "get": {
+                "operationId": "v1.interventions.proposals",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "proposals": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ProposalResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "proposals"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "v1.interventions.propose",
+                "summary": "Proposer un prix fixe et un rendez-vous, sans confirmer a la place du client",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProposeInterventionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Proposer le prix et le rendez-vous ; passe en proposed uniquement. Le client doit confirmer la proposition active. Aucun supplement ou changement apres accepted."
+            }
+        },
+        "/service-requests/{service_request}/proposals/{proposal}/confirm": {
+            "patch": {
+                "operationId": "v1.interventions.confirm-proposal",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "proposal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/service-requests/{service_request}/proposals/{proposal}/decline": {
+            "patch": {
+                "operationId": "v1.interventions.decline-proposal",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "proposal",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/service-requests/{service_request}/confirm-completion": {
+            "patch": {
+                "operationId": "v1.interventions.confirm-completion",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Client du dossier uniquement, depuis awaiting_confirmation ou disputed. Confirme la fin, resout le probleme ouvert et passe en completed. Aucun silence ni administrateur ne remplace cet accord."
+            }
+        },
+        "/service-requests/{service_request}/issues": {
+            "post": {
+                "operationId": "v1.interventions.issue",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IssueRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/service-requests/{service_request}/issues/resolve": {
+            "patch": {
+                "operationId": "v1.interventions.resolve",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResolveIssueRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/service-requests/{service_request}/review": {
+            "post": {
+                "operationId": "v1.interventions.review",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReviewInterventionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "review": {
+                                                    "$ref": "#/components/schemas/ProviderReviewResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "review"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Client uniquement apres completed. Un seul avis par intervention, note 1-5 et commentaire public obligatoire (3000 caracteres). Aucun avis automatique ni auto-evaluation du prestataire."
+            }
+        },
+        "/service-requests/{service_request}/attachments": {
+            "get": {
+                "operationId": "v1.interventions.attachments",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "attachments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/InterventionFileResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "attachments"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/service-requests/{service_request}/attachments/{media}": {
+            "get": {
+                "operationId": "v1.interventions.attachments.show",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "media",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "Range",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "bytes=0-1023"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "206": {
+                        "description": "Plage demandee.",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Fichier prive. Bearer obligatoire sur cette requete aussi. Controle du dossier et de la conversation, sans chemin de stockage public. Cache-Control private/no-store, lecture par plages pour les videos."
+            }
+        },
+        "/service-requests/{service_request}/accept": {
+            "patch": {
+                "operationId": "v1.service-requests.accept",
+                "summary": "Proposer un prix fixe et un rendez-vous, sans confirmer a la place du client",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProposeInterventionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Proposer le prix et le rendez-vous ; passe en proposed uniquement. Le client doit confirmer la proposition active. Aucun supplement ou changement apres accepted.",
+                "deprecated": true
+            }
+        },
+        "/service-requests/{service_request}/complete": {
+            "patch": {
+                "operationId": "v1.service-requests.complete",
+                "summary": "Declaration du prestataire : ne termine pas encore l intervention",
+                "tags": [
+                    "Intervention"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompletionRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ServiceRequestResponseResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Prestataire affecte uniquement, depuis in_progress. note facultative. Passe en awaiting_confirmation ; aucune publication ou note liee a une intervention terminee tant que le client ne confirme pas."
             }
         },
         "/locations/{location}": {
@@ -8205,7 +10346,7 @@
                         }
                     }
                 ],
-                "description": "visit_mode=at_client par defaut : location_id appartenant au client OU location ponctuelle (sans ajout au carnet). at_provider exige provider_id sans adresse client, et copie le lieu du prestataire. Offre active et mode compatible requis. Rayon PostGIS a vol d oiseau controle si les deux GPS existent ; sans GPS, couverture a convenir. Copie du lieu et distance arrondie conservees independamment des modifications ulterieures."
+                "description": "visit_mode=at_client par defaut : location_id appartenant au client OU location ponctuelle (sans ajout au carnet). at_provider exige provider_id sans adresse client, et copie le lieu du prestataire. Offre active et mode compatible requis. Rayon PostGIS a vol d oiseau controle si les deux GPS existent ; sans GPS, couverture a convenir. Copie du lieu et distance arrondie conservees independamment des modifications ulterieures. scheduled_date est facultatif et ne constitue qu une preference avant accord. Une conversation privee est ouverte lorsque le prestataire est affecte ; description maximale 5000 caracteres."
             }
         },
         "/service-requests/{service_request}": {
@@ -8347,85 +10488,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    },
-                    "503": {
-                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "const": false
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/service-requests/{service_request}/accept": {
-            "patch": {
-                "operationId": "v1.service-requests.accept",
-                "summary": "Accepte une demande affectee",
-                "tags": [
-                    "ServiceRequest"
-                ],
-                "parameters": [
-                    {
-                        "name": "service_request",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "X-Locale",
-                        "in": "header",
-                        "required": false,
-                        "description": "Langue des messages.",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "fr",
-                                "en",
-                                "ln"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`ServiceRequestResponseResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     },
                     "503": {
                         "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
@@ -8613,86 +10675,8 @@
                     {
                         "bearerAuth": []
                     }
-                ]
-            }
-        },
-        "/service-requests/{service_request}/complete": {
-            "patch": {
-                "operationId": "v1.service-requests.complete",
-                "summary": "Termine une demande en cours",
-                "tags": [
-                    "ServiceRequest"
                 ],
-                "parameters": [
-                    {
-                        "name": "service_request",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "X-Locale",
-                        "in": "header",
-                        "required": false,
-                        "description": "Langue des messages.",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "fr",
-                                "en",
-                                "ln"
-                            ]
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`ServiceRequestResponseResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "503": {
-                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "const": false
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "success",
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                "description": "Prestataire affecte, apres accord du client. Demarrage manuel. Pour un rendez-vous scheduled, impossible avant l heure convenue. Pour now, l arrivee est une estimation. Anciennes demandes deja acceptees conservees sans prix invente."
             }
         },
         "/service-requests/{service_request}/cancel": {
@@ -8726,6 +10710,24 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 3000
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "`ServiceRequestResponseResource`",
@@ -8739,6 +10741,9 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -9016,6 +11021,84 @@
                 ],
                 "title": "ChangePasswordRequest"
             },
+            "CompletionRequest": {
+                "type": "object",
+                "properties": {
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 5000
+                    }
+                },
+                "title": "CompletionRequest"
+            },
+            "ConversationCollectionResource": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "conversations": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/ConversationResource"
+                                }
+                            }
+                        },
+                        "required": [
+                            "conversations"
+                        ]
+                    }
+                },
+                "required": [
+                    "success",
+                    "data"
+                ],
+                "title": "ConversationCollectionResource"
+            },
+            "ConversationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "provider_id": {
+                        "type": "integer"
+                    },
+                    "is_current": {
+                        "type": "boolean"
+                    },
+                    "read_only": {
+                        "type": "boolean"
+                    },
+                    "unread_count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "last_message_id": [],
+                    "messages_url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "provider_id",
+                    "is_current",
+                    "read_only",
+                    "unread_count",
+                    "last_message_id",
+                    "messages_url"
+                ],
+                "title": "ConversationResource"
+            },
             "CountryCityResource": {
                 "type": "object",
                 "properties": {
@@ -9198,6 +11281,53 @@
                         }
                     }
                 ]
+            },
+            "InterventionFileResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "file_type": {
+                        "type": "string"
+                    },
+                    "mime_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "file_size": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "file_type",
+                    "mime_type",
+                    "file_size",
+                    "url"
+                ],
+                "title": "InterventionFileResource"
+            },
+            "IssueRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 3000
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "IssueRequest"
             },
             "LocationCollectionResource": {
                 "type": "object",
@@ -9660,6 +11790,123 @@
                 ],
                 "title": "MediaResponseResource"
             },
+            "MessageCollectionResource": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "messages": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/MessageResource"
+                                }
+                            }
+                        },
+                        "required": [
+                            "messages"
+                        ]
+                    }
+                },
+                "required": [
+                    "success",
+                    "data"
+                ],
+                "title": "MessageCollectionResource"
+            },
+            "MessageResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "conversation_id": {
+                        "type": "integer"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "user",
+                            "system"
+                        ]
+                    },
+                    "author": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "body": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "event": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "metadata": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "array",
+                                "items": {}
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InterventionFileResource"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "conversation_id",
+                    "kind",
+                    "author",
+                    "body",
+                    "event",
+                    "metadata",
+                    "files",
+                    "created_at"
+                ],
+                "title": "MessageResource"
+            },
             "ModeratePublicationRequest": {
                 "type": "object",
                 "properties": {
@@ -9808,6 +12055,154 @@
                     "retry_after"
                 ],
                 "title": "OtpResponseResource"
+            },
+            "ProposalResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "price": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string",
+                        "enum": [
+                            "USD",
+                            "CDF"
+                        ]
+                    },
+                    "terms": {
+                        "type": "string"
+                    },
+                    "appointment_mode": {
+                        "type": "string"
+                    },
+                    "scheduled_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "arrival_minutes": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "expires_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "accepted",
+                            "declined",
+                            "superseded",
+                            "withdrawn",
+                            "expired"
+                        ]
+                    },
+                    "is_expired": {
+                        "type": "boolean"
+                    },
+                    "confirmed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "price",
+                    "currency",
+                    "terms",
+                    "appointment_mode",
+                    "scheduled_date",
+                    "arrival_minutes",
+                    "expires_at",
+                    "status",
+                    "is_expired",
+                    "confirmed_at"
+                ],
+                "title": "ProposalResource"
+            },
+            "ProposeInterventionRequest": {
+                "type": "object",
+                "properties": {
+                    "price": {
+                        "type": [
+                            "number",
+                            "string"
+                        ],
+                        "minimum": 0,
+                        "maximum": 9999999999.99,
+                        "description": "Prix convenu, maximum 2 decimales ; chaine decimale recommandee. Aucun supplement apres accord."
+                    },
+                    "currency": {
+                        "type": "string",
+                        "enum": [
+                            "USD",
+                            "CDF"
+                        ]
+                    },
+                    "terms": {
+                        "type": "string",
+                        "maxLength": 3000
+                    },
+                    "appointment_mode": {
+                        "type": "string",
+                        "enum": [
+                            "now",
+                            "scheduled"
+                        ]
+                    },
+                    "scheduled_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?(?:Z|[+-]\\d{2}:\\d{2})$"
+                    },
+                    "arrival_minutes": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 240
+                    }
+                },
+                "required": [
+                    "price",
+                    "currency",
+                    "terms",
+                    "appointment_mode"
+                ],
+                "title": "ProposeInterventionRequest",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "appointment_mode": {
+                                "const": "now"
+                            }
+                        },
+                        "required": [
+                            "arrival_minutes"
+                        ]
+                    },
+                    {
+                        "properties": {
+                            "appointment_mode": {
+                                "const": "scheduled"
+                            }
+                        },
+                        "required": [
+                            "scheduled_date"
+                        ]
+                    }
+                ],
+                "description": "Prestataire affecte uniquement, avant accord. now: arrivee estimee 1-240 minutes apres confirmation, proposition valable 15 minutes. scheduled: date ISO 8601 future avec fuseau, validite 24h maximum et avant le rendez-vous. Remplace les propositions precedentes. Aucun accord sans confirmation du client."
             },
             "ProviderAreaResource": {
                 "type": "object",
@@ -10593,6 +12988,97 @@
                 ],
                 "title": "ResetPasswordRequest"
             },
+            "ResolveIssueRequest": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "resume_work",
+                            "cancel"
+                        ]
+                    },
+                    "resolution": {
+                        "type": "string",
+                        "maxLength": 3000
+                    }
+                },
+                "required": [
+                    "action",
+                    "resolution"
+                ],
+                "title": "ResolveIssueRequest"
+            },
+            "ReviewInterventionRequest": {
+                "type": "object",
+                "properties": {
+                    "rating": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                    },
+                    "comment": {
+                        "type": "string",
+                        "maxLength": 3000
+                    }
+                },
+                "required": [
+                    "rating",
+                    "comment"
+                ],
+                "title": "ReviewInterventionRequest"
+            },
+            "SendMessageRequest": {
+                "type": "object",
+                "properties": {
+                    "body": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 5000
+                    },
+                    "files": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "format": "binary",
+                            "contentMediaType": "application/octet-stream",
+                            "description": "Maximum file size: 102400 kilobytes."
+                        },
+                        "maxItems": 5
+                    }
+                },
+                "title": "SendMessageRequest",
+                "anyOf": [
+                    {
+                        "required": [
+                            "body"
+                        ],
+                        "properties": {
+                            "body": {
+                                "type": "string",
+                                "minLength": 1
+                            }
+                        }
+                    },
+                    {
+                        "required": [
+                            "files"
+                        ],
+                        "properties": {
+                            "files": {
+                                "type": "array",
+                                "minItems": 1
+                            }
+                        }
+                    }
+                ],
+                "description": "Texte non vide ou fichiers, ou les deux. Maximum 5 fichiers par message, photos 10 Mo et videos 100 Mo. Auteur et type utilisateur derives du compte. Conversation actuelle uniquement, lecture seule apres annulation/refus/fin."
+            },
             "ServiceCollectionResource": {
                 "type": "object",
                 "properties": {
@@ -10664,12 +13150,147 @@
                         "type": "integer"
                     },
                     "status": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "proposed",
+                            "accepted",
+                            "rejected",
+                            "in_progress",
+                            "awaiting_confirmation",
+                            "disputed",
+                            "completed",
+                            "cancelled"
+                        ]
                     },
                     "description": {
                         "type": "string"
                     },
                     "scheduled_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "conversation_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "latest_proposal": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ProposalResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "agreement": {
+                        "type": "object",
+                        "properties": {
+                            "proposal_id": {
+                                "type": [
+                                    "integer",
+                                    "null"
+                                ]
+                            },
+                            "price": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "currency": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "appointment_mode": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "legacy": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "proposal_id",
+                            "price",
+                            "currency",
+                            "appointment_mode",
+                            "legacy"
+                        ]
+                    },
+                    "started_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "completion": {
+                        "type": "object",
+                        "properties": {
+                            "note": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "declared_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "confirmed_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "needs_attention": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "note",
+                            "declared_at",
+                            "confirmed_at",
+                            "needs_attention"
+                        ]
+                    },
+                    "open_issue": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "reason": {
+                                "type": "string"
+                            },
+                            "created_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "reason",
+                            "created_at"
+                        ]
+                    },
+                    "cancellation_reason": {
                         "type": [
                             "string",
                             "null"
@@ -10778,7 +13399,7 @@
                         ]
                     },
                     "location": {
-                        "description": "Copie historique. Zone uniquement avant acceptation pour l autre participant ; details pour le proprietaire, admin et participants apres acceptation. Annulation/refus masque a nouveau les details.",
+                        "description": "Copie historique. L autre participant voit seulement la zone avant confirmation du prix et rendez-vous par le client. Details accessibles apres accord, y compris attente de confirmation de fin et probleme signale. Refus/annulation masque a nouveau les details.",
                         "oneOf": [
                             {
                                 "type": "object",
@@ -10902,6 +13523,13 @@
                     "status",
                     "description",
                     "scheduled_date",
+                    "conversation_id",
+                    "latest_proposal",
+                    "agreement",
+                    "started_at",
+                    "completion",
+                    "open_issue",
+                    "cancellation_reason",
                     "client",
                     "provider",
                     "service",
@@ -11321,17 +13949,20 @@
                         ]
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "maxLength": 5000
                     },
                     "scheduled_date": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "format": "date-time"
                     }
                 },
                 "required": [
                     "service_id",
-                    "description",
-                    "scheduled_date"
+                    "description"
                 ],
                 "title": "StoreServiceRequestRequest",
                 "oneOf": [
