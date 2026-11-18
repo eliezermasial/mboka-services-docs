@@ -527,4 +527,54 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/php-web-notification
 <p>L historique de conversation contient un message systeme request_cancelled avec auteur, role, instant et motif. Seul l autre participant recoit la notification d annulation ; le titre distingue client et prestataire. Le motif reste dans le dossier et la conversation prives : il n est pas ajoute au contenu externe Expo/e-mail/Web Push. L historique des notifications reste conserve.</p>
 <p>Les dates de rappel futur sont retirees ; les envois Expo et web encore en attente reverifient le statut puis passent en skipped. Les reports pending passent en withdrawn et ne peuvent plus etre acceptes. L agenda n affiche plus la prestation annulee, les details d adresse sont de nouveau masques a l autre participant, et la conversation passe en lecture seule. Le prix convenu et la proposition de prix restent conserves pour l historique.</p>
 <p>L operation prend le meme verrou SQL que le demarrage et les reports. Un second appel retourne 422 et ne remplace ni le motif ni l auteur du premier, ni ne cree une seconde notification. Audit, retrait des reports, message et notifications sont enregistres dans la meme transaction.</p>
+<h2>Tableau de bord du prestataire</h2>
+<p><code>GET /api/mboka-services/v1/provider-dashboard</code> exige un token Sanctum, une inscription verifiee, le role prestataire et un profil prestataire actif. Un administrateur n'obtient aucune vue globale par cette route : les donnees restent celles de son propre profil prestataire.</p>
+<p>Parametres : <code>section</code> (defaut <code>requests_to_handle</code>), <code>page</code> (minimum 1), <code>per_page</code> (15 par defaut, maximum 50).
+La reponse contient <code>data.counts</code> pour toutes les sections et <code>data.service_requests</code>, une liste paginee de la section choisie. <code>meta</code> fournit la section, l'instant de generation et la pagination ; <code>links</code> conserve les filtres pour les pages suivantes.</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Contenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>requests_to_handle</td>
+<td>Demandes pending et demandes proposed sans proposition courante encore valide (notamment expiree).</td>
+</tr>
+<tr>
+<td>awaiting_client</td>
+<td>Demandes proposed avec derniere proposition pending valide dans la conversation courante, pour ce prestataire.</td>
+</tr>
+<tr>
+<td>accepted</td>
+<td>Prestations acceptees avant demarrage, y compris les demandes pour maintenant et les dates passees encore non demarrees.</td>
+</tr>
+<tr>
+<td>in_progress</td>
+<td>Travaux en cours.</td>
+</tr>
+<tr>
+<td>awaiting_confirmation</td>
+<td>Travaux declares termines, en attente de confirmation du client.</td>
+</tr>
+<tr>
+<td>disputed</td>
+<td>Prestations avec probleme signale.</td>
+</tr>
+<tr>
+<td>completed</td>
+<td>Travaux termines et confirmes.</td>
+</tr>
+<tr>
+<td>upcoming</td>
+<td>Prestations acceptees et programmees aujourd'hui ou plus tard, selon le fuseau de chaque rendez-vous.</td>
+</tr>
+</tbody>
+</table>
+<p>Les compteurs portent sur tout l'historique accessible du prestataire, independamment de la page. <code>upcoming</code> est un sous-ensemble de <code>accepted</code> : ne pas additionner ces deux compteurs. Les demandes annulees, refusees, supprimees ou affectees a un autre prestataire sont exclues. Les demandes avec client ou service supprime sont exclues egalement.</p>
+<p>Les prochains rendez-vous sont tries par date locale puis identifiant, sans heure ni limite par jour. Les autres listes sont triees par derniere modification puis identifiant decroissant. Les propositions expirees sont reclassees pour l'affichage sans modifier leur statut en base ni envoyer de notification. Les compteurs sont calcules a la demande ; une modification concurrente peut etre visible au prochain rafraichissement.</p>
+<p>Exemple : <code>GET /api/mboka-services/v1/provider-dashboard?section=upcoming&amp;per_page=15&amp;page=1</code>.
+Les objets utilisent le contrat ServiceRequestResource existant : adresse precise masquee avant accord, visible pour les participants apres accord. Reponse privee sans cache partage. Maximum 60 requetes par minute. Aucun nouveau rendez-vous, rappel ou changement de statut n'est cree par la consultation.</p>
 </main></body></html>

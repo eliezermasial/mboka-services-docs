@@ -7793,6 +7793,294 @@
                 ]
             }
         },
+        "/provider-dashboard": {
+            "get": {
+                "operationId": "v1.provider-dashboard",
+                "summary": "Tableau de bord personnel du prestataire",
+                "tags": [
+                    "ProviderDashboard"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "section",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "requests_to_handle",
+                                "awaiting_client",
+                                "accepted",
+                                "in_progress",
+                                "awaiting_confirmation",
+                                "disputed",
+                                "completed",
+                                "upcoming"
+                            ],
+                            "default": "requests_to_handle"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "per_page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50,
+                            "default": 15
+                        },
+                        "in": "query",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compteurs et liste paginee du prestataire connecte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "counts": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "requests_to_handle": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "awaiting_client": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "accepted": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "in_progress": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "awaiting_confirmation": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "disputed": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "upcoming": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "requests_to_handle",
+                                                        "awaiting_client",
+                                                        "accepted",
+                                                        "in_progress",
+                                                        "awaiting_confirmation",
+                                                        "disputed",
+                                                        "completed",
+                                                        "upcoming"
+                                                    ]
+                                                },
+                                                "service_requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ServiceRequestResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "counts",
+                                                "service_requests"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "section": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "requests_to_handle",
+                                                        "awaiting_client",
+                                                        "accepted",
+                                                        "in_progress",
+                                                        "awaiting_confirmation",
+                                                        "disputed",
+                                                        "completed",
+                                                        "upcoming"
+                                                    ]
+                                                },
+                                                "generated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "section",
+                                                "generated_at",
+                                                "current_page",
+                                                "last_page",
+                                                "per_page",
+                                                "total"
+                                            ]
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "meta",
+                                        "links"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 60 consultations par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Prestataire verifie avec profil actif uniquement. Compteurs personnels sur tout l historique et liste paginee par section. upcoming est un sous-ensemble de accepted, aujourd hui inclus selon le fuseau du rendez-vous. Plusieurs rendez-vous par jour sans heure. Propositions expirees reclassees dans requests_to_handle sans ecriture. Adresse privee selon ServiceRequestResource. Aucun acces global administrateur. Reponse private, no-store. Maximum 60 requetes/minute."
+            }
+        },
         "/providers/{provider}": {
             "get": {
                 "operationId": "v1.providers.show",
