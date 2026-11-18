@@ -10947,7 +10947,7 @@
                     }
                 },
                 "security": [],
-                "description": "Public si published, avec fichiers et prestataire disponible. Un Bearer facultatif permet a son auteur verifie ou a un administrateur de previsualiser un brouillon ou contenu masque. Sinon 404. Les identifiants d intervention restent prives."
+                "description": "Public si published, avec fichiers et prestataire disponible. Un Bearer facultatif permet a son auteur verifie ou a un administrateur de previsualiser un brouillon. Sinon 404. Les identifiants d intervention restent prives."
             },
             "patch": {
                 "operationId": "v1.publications.update",
@@ -11039,7 +11039,7 @@
                         "bearerAuth": []
                     }
                 ],
-                "description": "Auteur uniquement. Modifier titre/description ou repasser en draft. Pour publier, confirmation explicite et au moins un fichier. Les liens auteur/prestataire/service/intervention sont immuables. Un contenu hidden exige restauration par la moderation."
+                "description": "Auteur uniquement. Modifier titre/description ou repasser en draft. Pour publier, confirmation explicite et au moins un fichier. Les liens auteur/prestataire/service/intervention sont immuables. Legende limitee a 1000 caracteres."
             },
             "delete": {
                 "operationId": "v1.publications.destroy",
@@ -11256,7 +11256,7 @@
                     }
                 },
                 "security": [],
-                "description": "Fichier servi apres controle de visibilite ; Bearer facultatif pour previsualisation auteur/admin. Cache-Control private/no-store. Le retrait ou masquage ferme aussi cet acces. En-tete Range possible pour lecture video."
+                "description": "Fichier servi apres controle de visibilite ; Bearer facultatif pour previsualisation auteur/admin. Cache-Control private/no-store. La suppression ou le retour en brouillon ferme aussi cet acces. En-tete Range possible pour lecture video."
             },
             "delete": {
                 "operationId": "v1.publications.media.destroy",
@@ -11348,7 +11348,7 @@
         "/publications/my": {
             "get": {
                 "operationId": "v1.publications.my",
-                "summary": "Mes publications, brouillons et contenus masques inclus",
+                "summary": "Mes publications, brouillons inclus",
                 "tags": [
                     "Publication"
                 ],
@@ -11711,7 +11711,7 @@
                         "bearerAuth": []
                     }
                 ],
-                "description": "Administrateur uniquement : publications signalees, nombre de signalements et 20 motifs recents maximum. Les signalements sont conserves apres moderation."
+                "description": "Administrateur uniquement : publications signalees, nombre de signalements et 20 motifs recents maximum. Les signalements sont conserves pour le suivi."
             }
         },
         "/publications": {
@@ -11797,6 +11797,199 @@
                     }
                 ],
                 "description": "Creer un brouillon. Ajouter les fichiers via /publications/{publication}/medias, previsualiser puis PATCH avec status=published et publication_consent=true. Les anciens portfolios ne sont pas publies automatiquement."
+            },
+            "get": {
+                "operationId": "v1.publications.index",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "publication_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 15,
+                            "maximum": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste paginee.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "publications": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PublicationResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "publications"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": []
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "description": "Lecture publique.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store. Fil published_at/id decroissants ; aucune vue automatique."
             }
         },
         "/publications/{publication}/medias": {
@@ -11998,12 +12191,213 @@
                 ]
             }
         },
-        "/publications/{publication}/moderation": {
-            "patch": {
-                "operationId": "v1.publications.moderate",
-                "summary": "Moderation administrateur : masquer ou rendre a l auteur en brouillon",
+        "/publications/{publication}/comments": {
+            "get": {
+                "operationId": "v1.publications.social.comments",
                 "tags": [
-                    "Publication"
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "publication_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 20,
+                            "maximum": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste paginee.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "comments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PublicationCommentResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "comments"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": []
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "description": "Lecture publique.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
+            },
+            "post": {
+                "operationId": "v1.publications.social.store",
+                "tags": [
+                    "PublicationSocial"
                 ],
                 "parameters": [
                     {
@@ -12035,18 +12429,43 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/ModeratePublicationRequest"
+                                "type": "object",
+                                "properties": {
+                                    "body": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 300
+                                    }
+                                },
+                                "required": [
+                                    "body"
+                                ]
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "`PublicationResponseResource`",
+                    "201": {
+                        "description": "Commentaire.",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PublicationResponseResource"
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "comment": {
+                                                    "$ref": "#/components/schemas/PublicationCommentResource"
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
                                 }
                             }
                         }
@@ -12082,6 +12501,29 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -12089,7 +12531,856 @@
                         "bearerAuth": []
                     }
                 ],
-                "description": "Administrateur uniquement. hide ferme la publication et ses fichiers au public ; restore rend la publication en draft, sans publication automatique. L auteur reste seul responsable de la nouvelle confirmation."
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
+            }
+        },
+        "/publications/{publication}/like": {
+            "put": {
+                "operationId": "v1.publications.social.like",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublicationSocialRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Interaction enregistree.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "publication": {
+                                                    "$ref": "#/components/schemas/PublicationResource"
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
+            },
+            "delete": {
+                "operationId": "v1.publications.social.unlike",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "publication_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Interaction enregistree.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "publication": {
+                                                    "$ref": "#/components/schemas/PublicationResource"
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
+            }
+        },
+        "/publications/{publication}/view": {
+            "post": {
+                "operationId": "v1.publications.social.view",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PublicationSocialRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Interaction enregistree.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "publication": {
+                                                    "$ref": "#/components/schemas/PublicationResource"
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store. Consultation declaree par le frontend ; unique par compte et publication, auteur exclu."
+            }
+        },
+        "/publications/{publication}/comments/{comment}": {
+            "patch": {
+                "operationId": "v1.publications.social.update",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "comment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "body": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 300
+                                    }
+                                },
+                                "required": [
+                                    "body"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Commentaire.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "comment": {
+                                                    "$ref": "#/components/schemas/PublicationCommentResource"
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
+            },
+            "delete": {
+                "operationId": "v1.publications.social.destroy",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "comment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "publication_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Interaction enregistree.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "maxItems": 0,
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
+            }
+        },
+        "/publications/{publication}/comments/{comment}/moderation": {
+            "delete": {
+                "operationId": "v1.publications.social.moderate",
+                "tags": [
+                    "PublicationSocial"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "comment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Interaction enregistree.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "maxItems": 0,
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "required": []
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "description": "Publication/commentaire inaccessible ou non possede.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Compte verifie.  Visibilite et droits auteur controles ; aucun droit de modification par le prestataire concerne seul. Commentaires texte 300 caracteres maximum. Identifiants publics UUID. Reponse private, no-store."
             }
         },
         "/push-devices": {
@@ -16010,22 +17301,6 @@
                 ],
                 "title": "MessageResource"
             },
-            "ModeratePublicationRequest": {
-                "type": "object",
-                "properties": {
-                    "action": {
-                        "type": "string",
-                        "enum": [
-                            "hide",
-                            "restore"
-                        ]
-                    }
-                },
-                "required": [
-                    "action"
-                ],
-                "title": "ModeratePublicationRequest"
-            },
             "NotificationCollectionResource": {
                 "type": "object",
                 "properties": {
@@ -16888,6 +18163,107 @@
                 ],
                 "title": "PublicationCollectionResource"
             },
+            "PublicationCommentRequest": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    },
+                    "publication_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    },
+                    "body": {
+                        "type": "string",
+                        "maxLength": 300
+                    }
+                },
+                "required": [
+                    "body"
+                ],
+                "title": "PublicationCommentRequest"
+            },
+            "PublicationCommentResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "body": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "author": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid"
+                            },
+                            "name": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "avatar_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": []
+                    },
+                    "permissions": {
+                        "type": "object",
+                        "properties": {
+                            "can_update": {
+                                "type": "boolean"
+                            },
+                            "can_delete": {
+                                "type": "boolean"
+                            },
+                            "can_moderate": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": []
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "body",
+                    "author",
+                    "permissions",
+                    "created_at",
+                    "updated_at"
+                ]
+            },
             "PublicationMediaResource": {
                 "type": "object",
                 "properties": {
@@ -16942,8 +18318,65 @@
                         "type": "string",
                         "enum": [
                             "draft",
-                            "published",
-                            "hidden"
+                            "published"
+                        ]
+                    },
+                    "likes_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "views_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "comments_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "is_liked": {
+                        "type": "boolean"
+                    },
+                    "provider": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "avatar_url": {
+                                "type": "null"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name",
+                            "avatar_url"
+                        ]
+                    },
+                    "provider_profile_url": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "permissions": {
+                        "type": "object",
+                        "properties": {
+                            "can_update": {
+                                "type": "boolean"
+                            },
+                            "can_delete": {
+                                "type": "boolean"
+                            }
+                        },
+                        "required": [
+                            "can_update",
+                            "can_delete"
                         ]
                     },
                     "provider_id": {
@@ -16957,6 +18390,11 @@
                     "author": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                            },
                             "name": {
                                 "type": "string"
                             },
@@ -16975,6 +18413,7 @@
                             }
                         },
                         "required": [
+                            "id",
                             "name",
                             "role",
                             "avatar_url"
@@ -17035,6 +18474,13 @@
                     "title",
                     "description",
                     "status",
+                    "likes_count",
+                    "views_count",
+                    "comments_count",
+                    "is_liked",
+                    "provider",
+                    "provider_profile_url",
+                    "permissions",
                     "provider_id",
                     "author",
                     "verified_intervention",
@@ -17073,6 +18519,31 @@
                     "data"
                 ],
                 "title": "PublicationResponseResource"
+            },
+            "PublicationSocialRequest": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    },
+                    "publication_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    }
+                },
+                "title": "PublicationSocialRequest"
             },
             "RegisterRequest": {
                 "type": "object",
@@ -18270,7 +19741,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 5000
+                        "maxLength": 1000
                     },
                     "service_request_id": {
                         "type": [
@@ -18901,7 +20372,7 @@
                     },
                     "description": {
                         "type": "string",
-                        "maxLength": 5000
+                        "maxLength": 1000
                     },
                     "status": {
                         "type": "string",
@@ -19489,25 +20960,6 @@
                     }
                 }
             },
-            "ModelNotFoundException": {
-                "description": "Not found",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
             "AuthorizationException": {
                 "description": "Action non autorisee pour ce compte.",
                 "content": {
@@ -19525,6 +20977,25 @@
                             },
                             "required": [
                                 "success",
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
+            "ModelNotFoundException": {
+                "description": "Not found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
                                 "message"
                             ]
                         }
