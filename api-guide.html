@@ -577,4 +577,61 @@ La reponse contient <code>data.counts</code> pour toutes les sections et <code>d
 <p>Les prochains rendez-vous sont tries par date locale puis identifiant, sans heure ni limite par jour. Les autres listes sont triees par derniere modification puis identifiant decroissant. Les propositions expirees sont reclassees pour l'affichage sans modifier leur statut en base ni envoyer de notification. Les compteurs sont calcules a la demande ; une modification concurrente peut etre visible au prochain rafraichissement.</p>
 <p>Exemple : <code>GET /api/mboka-services/v1/provider-dashboard?section=upcoming&amp;per_page=15&amp;page=1</code>.
 Les objets utilisent le contrat ServiceRequestResource existant : adresse precise masquee avant accord, visible pour les participants apres accord. Reponse privee sans cache partage. Maximum 60 requetes par minute. Aucun nouveau rendez-vous, rappel ou changement de statut n'est cree par la consultation.</p>
+<h2>Tableau de bord du client</h2>
+<p><code>GET /api/mboka-services/v1/client-dashboard</code> exige un token Sanctum, une inscription verifiee, le role client et un profil client actif. Il rassemble les demandes appartenant au client connecte ; les roles prestataire ou administrateur supplementaires n'elargissent jamais cet acces.</p>
+<p>Parametres : <code>section</code> (defaut <code>awaiting_provider</code>), <code>page</code> (minimum 1), <code>per_page</code> (15 par defaut, maximum 50). La reponse comprend <code>data.counts</code> pour toutes les sections, <code>data.service_requests</code> pour la liste paginee et <code>meta</code> pour la section, l'instant de generation et la pagination. Les liens first/last/prev/next conservent les filtres.</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Contenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>awaiting_provider</td>
+<td>Demandes pending, y compris sans prestataire ; demandes proposed sans proposition courante valide ou sans prestataire actif.</td>
+</tr>
+<tr>
+<td>proposals_to_review</td>
+<td>Dernieres propositions pending non expirees, dans la conversation courante et pour le prestataire actuellement affecte.</td>
+</tr>
+<tr>
+<td>accepted</td>
+<td>Prestations acceptees avant demarrage.</td>
+</tr>
+<tr>
+<td>in_progress</td>
+<td>Travaux en cours.</td>
+</tr>
+<tr>
+<td>awaiting_confirmation</td>
+<td>Travaux declares termines par le prestataire, a confirmer par le client.</td>
+</tr>
+<tr>
+<td>disputed</td>
+<td>Prestations avec probleme signale.</td>
+</tr>
+<tr>
+<td>completed</td>
+<td>Prestations terminees et confirmees.</td>
+</tr>
+<tr>
+<td>to_review</td>
+<td>Prestations completed sans avis existant, avec un prestataire actif distinct du client.</td>
+</tr>
+<tr>
+<td>cancelled</td>
+<td>Demandes annulees.</td>
+</tr>
+<tr>
+<td>rejected</td>
+<td>Demandes refusees.</td>
+</tr>
+</tbody>
+</table>
+<p>Les propositions programmees sont aussi verifiees selon la date locale de leur rendez-vous. Une offre expiree est reclassee pour l'affichage sans modifier la base ni envoyer de notification. Les listes sont triees par derniere modification puis identifiant decroissant. Les compteurs couvrent tout l'historique, independamment de la page ; <code>to_review</code> est un sous-ensemble de <code>completed</code>, leurs compteurs ne s'additionnent pas. Les demandes ou services supprimes sont exclus. Une modification concurrente peut apparaitre au prochain rafraichissement.</p>
+<p><code>links.agenda</code> pointe vers l'agenda existant : le frontend ajoute les dates <code>from</code> et <code>to</code> pour le consulter. Aucune seconde liste de rendez-vous n'est creee dans ce tableau de bord.</p>
+<p>Les objets respectent ServiceRequestResource et les regles d'adresse existantes : le client voit sa propre adresse ; l'adresse privee de l'etablissement du prestataire reste masquee avant accord. Reponse privee sans cache partage, limite de 60 requetes par minute.</p>
+<p>Exemple : <code>GET /api/mboka-services/v1/client-dashboard?section=proposals_to_review&amp;per_page=15&amp;page=1</code>. Les actions (confirmer une proposition, confirmer la fin ou publier un avis) continuent d'utiliser les routes protegees existantes, qui revalident les droits et le statut au moment de l'action.</p>
 </main></body></html>

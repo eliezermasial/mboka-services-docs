@@ -2951,6 +2951,314 @@
                 ]
             }
         },
+        "/client-dashboard": {
+            "get": {
+                "operationId": "v1.client-dashboard",
+                "summary": "Tableau de bord personnel du client",
+                "tags": [
+                    "ClientDashboard"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "section",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "awaiting_provider",
+                                "proposals_to_review",
+                                "accepted",
+                                "in_progress",
+                                "awaiting_confirmation",
+                                "disputed",
+                                "completed",
+                                "to_review",
+                                "cancelled",
+                                "rejected"
+                            ],
+                            "default": "awaiting_provider"
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "per_page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50,
+                            "default": 15
+                        },
+                        "in": "query",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compteurs et liste paginee du client connecte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "counts": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "awaiting_provider": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "proposals_to_review": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "accepted": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "in_progress": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "awaiting_confirmation": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "disputed": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "completed": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "to_review": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "cancelled": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "rejected": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "awaiting_provider",
+                                                        "proposals_to_review",
+                                                        "accepted",
+                                                        "in_progress",
+                                                        "awaiting_confirmation",
+                                                        "disputed",
+                                                        "completed",
+                                                        "to_review",
+                                                        "cancelled",
+                                                        "rejected"
+                                                    ]
+                                                },
+                                                "service_requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ServiceRequestResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "counts",
+                                                "service_requests"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "section": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "awaiting_provider",
+                                                        "proposals_to_review",
+                                                        "accepted",
+                                                        "in_progress",
+                                                        "awaiting_confirmation",
+                                                        "disputed",
+                                                        "completed",
+                                                        "to_review",
+                                                        "cancelled",
+                                                        "rejected"
+                                                    ]
+                                                },
+                                                "generated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "section",
+                                                "generated_at",
+                                                "current_page",
+                                                "last_page",
+                                                "per_page",
+                                                "total"
+                                            ]
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "agenda": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "description": "Route agenda personnelle ; fournir from et to pour la consulter."
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next",
+                                                "agenda"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "meta",
+                                        "links"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 60 consultations par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Client verifie avec profil actif. Compteurs personnels et demandes paginees par section, sans acces global administrateur. Offres expirees reclassees sans ecriture ; offres programmees verifiees selon leur date locale. to_review est un sous-ensemble de completed, sans avis existant, avec prestataire actif distinct du client. Demandes sans prestataire conservees. Adresses selon ServiceRequestResource. links.agenda exige from/to lors de sa consultation. Reponse private, no-store. Maximum 60 requetes/minute."
+            }
+        },
         "/service-requests/{service_request}/conversations": {
             "get": {
                 "operationId": "v1.interventions.conversations",
