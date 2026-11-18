@@ -1197,6 +1197,534 @@
                 "description": "Agenda personnel du client et/ou prestataire connecte, groupe par date locale. from et to obligatoires, intervalle maximum 93 jours. Rendez-vous accepted/in_progress/awaiting_confirmation/disputed/completed. Aucune heure, aucun blocage ni limite par jour. Pagination par rendez-vous : un jour peut continuer sur la page suivante. Aucun acces global administrateur."
             }
         },
+        "/service-requests/{service_request}/reschedules": {
+            "get": {
+                "operationId": "v1.reschedules.index",
+                "summary": "Historique prive des reports de la conversation actuelle, 20 par page",
+                "tags": [
+                    "AppointmentReschedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique prive et pagine.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "reschedules": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/RescheduleResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "reschedules"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": []
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Participants actuels et administrateur en lecture. Historique de la conversation actuelle, 20 propositions par page, plus recentes d abord. Ne permet pas a un administrateur d accepter a la place d une partie."
+            },
+            "post": {
+                "operationId": "v1.reschedules.store",
+                "tags": [
+                    "AppointmentReschedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RescheduleAppointmentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande de prestation et report actif apres l action.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "service_request": {
+                                                    "$ref": "#/components/schemas/ServiceRequestResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "service_request"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Dossier ou report inaccessible, ou auteur ne pouvant pas decider de sa propre proposition.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "summary": "Proposer une nouvelle date sans changer le rendez-vous actuel",
+                "description": "Client ou prestataire actuel, intervention accepted avec accord de prix moderne. scheduled_date YYYY-MM-DD differente de la date actuelle, aujourd hui ou plus tard selon le fuseau du lieu conserve dans l accord. Motif facultatif. Aucun prix, devise, mode ou fuseau modifiable. Une seule proposition en attente ; une nouvelle remplace la precedente. Expiration apres 24 heures au plus, ou fin du nouveau jour local. La date actuelle et ses rappels restent valables jusqu a l accord explicite de l autre participant. Maximum 30 propositions/minute."
+            }
+        },
+        "/service-requests/{service_request}/reschedules/{reschedule}/accept": {
+            "patch": {
+                "operationId": "v1.reschedules.accept",
+                "tags": [
+                    "AppointmentReschedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reschedule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande de prestation et report actif apres l action.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "service_request": {
+                                                    "$ref": "#/components/schemas/ServiceRequestResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "service_request"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Dossier ou report inaccessible, ou auteur ne pouvant pas decider de sa propre proposition.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Autre participant uniquement. Proposition active et non expiree, avant demarrage. Conserve prix, devise et proposition de prix originale ; applique uniquement la nouvelle date et passe le mode now eventuel a scheduled. Incremente appointment_revision, recalcule les rappels de veille 07:30/jour 00:00 et rend obsoletes les anciens envois en attente. Verrou SQL commun aux actions d intervention : pas de double acceptation."
+            }
+        },
+        "/service-requests/{service_request}/reschedules/{reschedule}/decline": {
+            "patch": {
+                "operationId": "v1.reschedules.decline",
+                "tags": [
+                    "AppointmentReschedule"
+                ],
+                "parameters": [
+                    {
+                        "name": "service_request",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "reschedule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande de prestation et report actif apres l action.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "service_request": {
+                                                    "$ref": "#/components/schemas/ServiceRequestResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "service_request"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Dossier ou report inaccessible, ou auteur ne pouvant pas decider de sa propre proposition.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Autre participant uniquement. Refuse le report actif ; date et rappels actuels inchanges."
+            }
+        },
         "/auth/register": {
             "post": {
                 "operationId": "v1.auth.register",
@@ -4146,7 +4674,7 @@
                         "bearerAuth": []
                     }
                 ],
-                "description": "Proposer le prix et le rendez-vous ; passe en proposed uniquement. Le client doit confirmer la proposition active. Aucun supplement ou changement apres accepted."
+                "description": "Proposer le prix et le rendez-vous ; passe en proposed uniquement. Le client doit confirmer la proposition active. Prix fixe apres accepted ; report de date uniquement via les routes reschedules avec accord mutuel."
             }
         },
         "/service-requests/{service_request}/proposals/{proposal}/confirm": {
@@ -5016,7 +5544,7 @@
                         "bearerAuth": []
                     }
                 ],
-                "description": "Proposer le prix et le rendez-vous ; passe en proposed uniquement. Le client doit confirmer la proposition active. Aucun supplement ou changement apres accepted.",
+                "description": "Proposer le prix et le rendez-vous ; passe en proposed uniquement. Le client doit confirmer la proposition active. Prix fixe apres accepted ; report de date uniquement via les routes reschedules avec accord mutuel.",
                 "deprecated": true
             }
         },
@@ -14685,6 +15213,115 @@
                 ],
                 "title": "ReportPublicationRequest"
             },
+            "RescheduleAppointmentRequest": {
+                "type": "object",
+                "properties": {
+                    "scheduled_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2027-01-25"
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "scheduled_date"
+                ]
+            },
+            "RescheduleResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "accepted",
+                            "declined",
+                            "superseded",
+                            "withdrawn",
+                            "expired"
+                        ]
+                    },
+                    "requested_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "requested_role": {
+                        "type": "string",
+                        "enum": [
+                            "client",
+                            "provider"
+                        ]
+                    },
+                    "from_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "to_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "timezone": {
+                        "type": "string",
+                        "example": "Africa/Kinshasa"
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    },
+                    "base_revision": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "is_expired": {
+                        "type": "boolean"
+                    },
+                    "responded_by": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "responded_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "status",
+                    "from_date",
+                    "to_date",
+                    "timezone",
+                    "base_revision",
+                    "expires_at",
+                    "is_expired"
+                ]
+            },
             "ResendPhoneOtpRequest": {
                 "type": "object",
                 "properties": {
@@ -14886,6 +15523,21 @@
             "ServiceRequestResource": {
                 "type": "object",
                 "properties": {
+                    "appointment_revision": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Version de la date, incrementee seulement lors d un report accepte."
+                    },
+                    "pending_reschedule": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/RescheduleResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "id": {
                         "type": "integer"
                     },
@@ -15270,6 +15922,8 @@
                     }
                 },
                 "required": [
+                    "appointment_revision",
+                    "pending_reschedule",
                     "id",
                     "status",
                     "description",
