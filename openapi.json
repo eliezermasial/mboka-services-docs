@@ -1210,7 +1210,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -1326,7 +1327,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -1465,7 +1467,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -1473,7 +1476,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -1601,7 +1605,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -1609,7 +1614,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -2362,7 +2368,7 @@
                                     },
                                     "channel_name": {
                                         "type": "string",
-                                        "example": "private-conversations.12"
+                                        "example": "private-conversations.550e8400-e29b-41d4-a716-446655440000"
                                     }
                                 },
                                 "required": [
@@ -2624,7 +2630,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -2691,7 +2698,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -2781,7 +2789,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -2858,7 +2867,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3271,7 +3281,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3476,15 +3487,16 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
                         "name": "after_id",
                         "in": "query",
                         "schema": {
-                            "type": "integer",
-                            "minimum": 0
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3699,7 +3711,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3809,7 +3822,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3835,8 +3849,9 @@
                                 "type": "object",
                                 "properties": {
                                     "last_message_id": {
-                                        "type": "integer",
-                                        "minimum": 1
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     }
                                 },
                                 "required": [
@@ -3929,7 +3944,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -3937,7 +3953,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -4102,7 +4119,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -4188,7 +4206,9 @@
                                                         "type": "object",
                                                         "properties": {
                                                             "id": {
-                                                                "type": "integer"
+                                                                "type": "string",
+                                                                "format": "uuid",
+                                                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                                             },
                                                             "name": {
                                                                 "type": "string"
@@ -4390,7 +4410,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -4785,7 +4806,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -4905,7 +4927,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -4997,7 +5020,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5005,7 +5029,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5083,7 +5108,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5091,7 +5117,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5169,7 +5196,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5248,7 +5276,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5339,7 +5368,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5430,7 +5460,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5542,7 +5573,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5663,7 +5695,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5671,7 +5704,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5775,7 +5809,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5869,7 +5904,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -5961,7 +5997,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6061,7 +6098,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6174,7 +6212,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6274,7 +6313,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6379,7 +6419,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6765,7 +6806,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6842,7 +6884,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -6932,7 +6975,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -7009,7 +7053,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -7600,7 +7645,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -7679,7 +7725,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8402,7 +8449,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8471,7 +8519,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8700,7 +8749,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8829,7 +8879,8 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8837,7 +8888,8 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8845,7 +8897,8 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -8967,9 +9020,11 @@
                                                         },
                                                         "city_id": {
                                                             "type": [
-                                                                "integer",
+                                                                "string",
                                                                 "null"
-                                                            ]
+                                                            ],
+                                                            "format": "uuid",
+                                                            "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                                         },
                                                         "district": {
                                                             "type": [
@@ -9229,6 +9284,708 @@
                 ]
             }
         },
+        "/favorite-providers": {
+            "get": {
+                "operationId": "v1.favorite-providers.index",
+                "summary": "Lister mes prestataires favoris",
+                "tags": [
+                    "ProviderFavorite"
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                        },
+                        "in": "query",
+                        "required": false
+                    },
+                    {
+                        "name": "per_page",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50,
+                            "default": 15
+                        },
+                        "in": "query",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Favoris publics du client connecte.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "providers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ProviderFavoriteResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "providers"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "last_page",
+                                                "total",
+                                                "per_page"
+                                            ]
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "meta",
+                                        "links"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 60 requetes par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Client verifie avec profil actif. Favoris personnels encore visibles dans l annuaire, du dernier ajout au premier ; total limite aux fiches visibles. Services, tarifs, reputation et zone du contrat public. Aucune adresse privee ni coordonnee de contact. Maximum 60 requetes/minute. Reponse private, no-store."
+            }
+        },
+        "/favorite-providers/{provider}": {
+            "get": {
+                "operationId": "v1.favorite-providers.show",
+                "summary": "Verifier mon favori",
+                "tags": [
+                    "ProviderFavorite"
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "provider_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Etat favori personnel.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "provider_id": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                                                },
+                                                "is_favorite": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "provider_id",
+                                                "is_favorite"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 60 requetes par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Etat personnel enregistre, y compris pour une fiche devenue invisible. false si aucun enregistrement pour cette fiche ; UUID inconnu retourne 404. Aucun acces aux favoris des autres clients."
+            },
+            "put": {
+                "operationId": "v1.favorite-providers.store",
+                "summary": "Enregistrer un prestataire favori",
+                "tags": [
+                    "ProviderFavorite"
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Etat favori personnel.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "provider_id": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                                                },
+                                                "is_favorite": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "provider_id",
+                                                "is_favorite"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Prestataire inexistant ou fiche publique inaccessible.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 60 requetes par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Ajout idempotent. Fiche publique verifiee et active uniquement, sinon 404 ; propre profil interdit (403). Pas de notification, date du premier ajout conservee. Aucun corps requis."
+            },
+            "delete": {
+                "operationId": "v1.favorite-providers.destroy",
+                "summary": "Retirer un prestataire favori",
+                "tags": [
+                    "ProviderFavorite"
+                ],
+                "parameters": [
+                    {
+                        "name": "provider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 50
+                        }
+                    },
+                    {
+                        "name": "client_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "provider_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Etat favori personnel.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "provider_id": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                                                },
+                                                "is_favorite": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "provider_id",
+                                                "is_favorite"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 60 requetes par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Retrait personnel idempotent. Fonctionne meme si la fiche est invisible ou supprimee logiquement ; UUID inconnu retourne 404. Aucun corps requis."
+            }
+        },
         "/provider-services": {
             "get": {
                 "operationId": "v1.provider-services.index",
@@ -9385,7 +10142,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -9452,7 +10210,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -9542,7 +10301,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -9619,7 +10379,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -9796,7 +10557,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -9864,7 +10626,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -9954,7 +10717,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10046,7 +10810,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10054,7 +10819,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10168,7 +10934,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10176,7 +10943,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10506,7 +11274,29 @@
                                                             "reports": {
                                                                 "type": "array",
                                                                 "items": {
-                                                                    "$ref": "#/components/schemas/PublicationReport"
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "string",
+                                                                            "format": "uuid",
+                                                                            "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                                                                        },
+                                                                        "reason": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "created_at": {
+                                                                            "type": [
+                                                                                "string",
+                                                                                "null"
+                                                                            ],
+                                                                            "format": "date-time"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "id",
+                                                                        "reason",
+                                                                        "created_at"
+                                                                    ]
                                                                 }
                                                             }
                                                         },
@@ -10687,7 +11477,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10779,7 +11570,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -10884,7 +11676,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -11320,7 +12113,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -11974,7 +12768,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12041,7 +12836,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12131,7 +12927,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12208,7 +13005,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12385,7 +13183,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12618,7 +13417,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12697,7 +13497,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12789,7 +13590,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12868,7 +13670,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -12948,7 +13751,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -13229,7 +14033,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -13549,7 +14354,8 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid"
                         }
                     },
                     {
@@ -13653,7 +14459,9 @@
                 "type": "object",
                 "properties": {
                     "provider_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     }
                 },
                 "required": [
@@ -13733,7 +14541,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "name": {
                         "type": "string"
@@ -13759,7 +14569,9 @@
                             "type": "object",
                             "properties": {
                                 "id": {
-                                    "type": "integer"
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                 },
                                 "name": {
                                     "type": "string"
@@ -13932,16 +14744,33 @@
                 "type": "object",
                 "properties": {
                     "client_read_message_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "provider_read_message_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "provider_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "is_current": {
                         "type": "boolean"
@@ -13956,7 +14785,14 @@
                         ],
                         "minimum": 0
                     },
-                    "last_message_id": [],
+                    "last_message_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    },
                     "messages_url": {
                         "type": "string"
                     }
@@ -13978,7 +14814,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "name": {
                         "type": "string"
@@ -14033,7 +14871,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "name": {
                         "type": "string"
@@ -14127,9 +14967,11 @@
                     },
                     "country_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "channel": {
                         "type": "string",
@@ -14168,7 +15010,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "file_type": {
                         "type": "string"
@@ -14247,7 +15091,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "label": {
                         "type": "string"
@@ -14268,7 +15114,12 @@
                         "type": "boolean"
                     },
                     "country_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "country": {
                         "type": [
@@ -14277,7 +15128,9 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -14307,7 +15160,12 @@
                         ]
                     },
                     "city_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "city": {
                         "type": [
@@ -14316,13 +15174,20 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
                             },
                             "country_id": {
-                                "type": "integer"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             }
                         },
                         "required": [
@@ -14409,9 +15274,11 @@
                     },
                     "country_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "password": {
                         "type": "string"
@@ -14509,7 +15376,9 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "file_type": {
                                 "type": "string"
@@ -14542,7 +15411,9 @@
                                 "type": "object",
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "name": {
                                         "type": "string"
@@ -14567,7 +15438,11 @@
                                                     "unknown"
                                                 ]
                                             },
-                                            "id": []
+                                            "id": {
+                                                "type": "string",
+                                                "format": "uuid",
+                                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                                            }
                                         },
                                         "required": [
                                             "type",
@@ -14605,7 +15480,9 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "file_type": {
                                 "type": "string"
@@ -14703,10 +15580,17 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "conversation_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "kind": {
                         "type": "string",
@@ -14720,9 +15604,11 @@
                         "properties": {
                             "id": {
                                 "type": [
-                                    "integer",
+                                    "string",
                                     "null"
-                                ]
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": [
@@ -14846,14 +15732,15 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "type": {
                         "type": "string"
                     },
                     "data": {
-                        "type": "array",
-                        "items": []
+                        "type": "string"
                     },
                     "read_at": {
                         "type": [
@@ -14942,7 +15829,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "price": {
                         "type": "string"
@@ -15133,11 +16022,67 @@
                 ],
                 "title": "ProviderAreaResource"
             },
+            "ProviderFavoriteRequest": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    },
+                    "provider_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    }
+                },
+                "title": "ProviderFavoriteRequest"
+            },
+            "ProviderFavoriteResource": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/ProviderPublicResource"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "favorited_at": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "profile_url": {
+                                "type": "string",
+                                "format": "uri"
+                            }
+                        },
+                        "required": [
+                            "favorited_at",
+                            "profile_url"
+                        ]
+                    }
+                ]
+            },
             "ProviderPublicResource": {
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "name": {
                         "type": "string"
@@ -15254,7 +16199,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "rating": {
                         "type": "integer"
@@ -15368,7 +16315,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "price": {
                         "type": "string"
@@ -15380,13 +16329,20 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
                             },
                             "user_id": {
-                                "type": "integer"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "area": {
                                 "$ref": "#/components/schemas/PublicProviderAreaResource"
@@ -15403,7 +16359,9 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -15421,7 +16379,9 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "name": {
                                         "type": "string"
@@ -15504,15 +16464,19 @@
                     },
                     "country_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "city_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "district": {
                         "type": [
@@ -15593,7 +16557,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "file_type": {
                         "type": "string"
@@ -15623,51 +16589,13 @@
                 ],
                 "title": "PublicationMediaResource"
             },
-            "PublicationReport": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer"
-                    },
-                    "publication_id": {
-                        "type": "integer"
-                    },
-                    "user_id": {
-                        "type": "integer"
-                    },
-                    "reason": {
-                        "type": "string"
-                    },
-                    "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "id",
-                    "publication_id",
-                    "user_id",
-                    "reason",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "PublicationReport"
-            },
             "PublicationResource": {
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "title": {
                         "type": "string"
@@ -15684,7 +16612,12 @@
                         ]
                     },
                     "provider_id": {
-                        "type": "integer"
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "author": {
                         "type": "object",
@@ -15722,7 +16655,9 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -15741,10 +16676,11 @@
                     },
                     "service_request_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
                         ],
-                        "description": "Present uniquement pour l auteur ou administrateur connecte ; aucune adresse ou contact d intervention n est publie."
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "published_at": {
                         "type": [
@@ -15811,7 +16747,9 @@
                         "maxLength": 255
                     },
                     "country_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "phone": {
                         "type": "string",
@@ -15903,7 +16841,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "status": {
                         "type": "string",
@@ -15918,9 +16858,11 @@
                     },
                     "requested_by": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "requested_role": {
                         "type": "string",
@@ -15961,9 +16903,11 @@
                     },
                     "responded_by": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "responded_at": {
                         "type": [
@@ -16205,7 +17149,9 @@
                         ]
                     },
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "status": {
                         "type": "string",
@@ -16243,9 +17189,11 @@
                     },
                     "conversation_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "latest_proposal": {
                         "anyOf": [
@@ -16262,9 +17210,11 @@
                         "properties": {
                             "proposal_id": {
                                 "type": [
-                                    "integer",
+                                    "string",
                                     "null"
-                                ]
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "price": {
                                 "type": [
@@ -16341,7 +17291,9 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "reason": {
                                 "type": "string"
@@ -16372,9 +17324,11 @@
                                 "properties": {
                                     "by_user_id": {
                                         "type": [
-                                            "integer",
+                                            "string",
                                             "null"
-                                        ]
+                                        ],
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "by_role": {
                                         "type": [
@@ -16422,13 +17376,20 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
                             },
                             "user_id": {
-                                "type": "integer"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             }
                         },
                         "required": [
@@ -16444,13 +17405,20 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
                             },
                             "user_id": {
-                                "type": "integer"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             }
                         },
                         "required": [
@@ -16466,7 +17434,9 @@
                         ],
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -16481,7 +17451,9 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "name": {
                                         "type": "string"
@@ -16524,7 +17496,9 @@
                                 "type": "object",
                                 "properties": {
                                     "country_id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "country_name": {
                                         "type": [
@@ -16533,7 +17507,9 @@
                                         ]
                                     },
                                     "city_id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "city_name": {
                                         "type": [
@@ -16566,7 +17542,9 @@
                                 "type": "object",
                                 "properties": {
                                     "country_id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "country_name": {
                                         "type": [
@@ -16575,7 +17553,9 @@
                                         ]
                                     },
                                     "city_id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "city_name": {
                                         "type": [
@@ -16591,9 +17571,11 @@
                                     },
                                     "id": {
                                         "type": [
-                                            "integer",
+                                            "string",
                                             "null"
-                                        ]
+                                        ],
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "label": {
                                         "type": "string"
@@ -16701,7 +17683,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "name": {
                         "type": "string"
@@ -16725,7 +17709,9 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -16815,10 +17801,14 @@
                 "type": "object",
                 "properties": {
                     "country_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "city_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "address": {
                         "type": "string",
@@ -16882,8 +17872,9 @@
                         ]
                     },
                     "mediable_id": {
-                        "type": "integer",
-                        "minimum": 1
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "media_type": {
                         "type": "string",
@@ -16912,7 +17903,9 @@
                 "type": "object",
                 "properties": {
                     "service_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "price": {
                         "type": "number",
@@ -16946,17 +17939,19 @@
                     },
                     "service_request_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
                         ],
-                        "minimum": 1
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "service_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
                         ],
-                        "minimum": 1
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     }
                 },
                 "required": [
@@ -17015,7 +18010,9 @@
                         ]
                     },
                     "category_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     }
                 },
                 "required": [
@@ -17028,7 +18025,9 @@
                 "type": "object",
                 "properties": {
                     "service_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "visit_mode": {
                         "type": "string",
@@ -17039,9 +18038,11 @@
                     },
                     "location_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "location": {
                         "type": [
@@ -17050,10 +18051,14 @@
                         ],
                         "properties": {
                             "country_id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "city_id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "address": {
                                 "type": "string",
@@ -17102,9 +18107,11 @@
                     },
                     "provider_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "description": {
                         "type": "string",
@@ -17132,7 +18139,9 @@
                         ],
                         "properties": {
                             "location_id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "visit_mode": {
                                 "const": "at_client"
@@ -17172,7 +18181,9 @@
                                 "const": "at_provider"
                             },
                             "provider_id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             }
                         },
                         "not": {
@@ -17269,10 +18280,14 @@
                 "type": "object",
                 "properties": {
                     "country_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "city_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "address": {
                         "type": "string",
@@ -17336,8 +18351,9 @@
                         ]
                     },
                     "mediable_id": {
-                        "type": "integer",
-                        "minimum": 1
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "media_type": {
                         "type": "string",
@@ -17380,9 +18396,11 @@
                     },
                     "avatar_media_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "email": {
                         "type": "string"
@@ -17394,7 +18412,9 @@
                         "type": "string"
                     },
                     "user_id": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "account_type": {
                         "type": "string"
@@ -17418,10 +18438,14 @@
                         "type": "string"
                     },
                     "country_id": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "location_id": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     }
                 },
                 "title": "UpdateProfileRequest"
@@ -17430,7 +18454,9 @@
                 "type": "object",
                 "properties": {
                     "location_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "work_mode": {
                         "type": "string",
@@ -17463,7 +18489,9 @@
                 "type": "object",
                 "properties": {
                     "service_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "price": {
                         "type": "number",
@@ -17548,7 +18576,9 @@
                         ]
                     },
                     "category_id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     }
                 },
                 "required": [
@@ -17576,7 +18606,9 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "name": {
                         "type": "string"
@@ -17613,9 +18645,11 @@
                     },
                     "avatar_media_id": {
                         "type": [
-                            "integer",
+                            "string",
                             "null"
-                        ]
+                        ],
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                     },
                     "avatar_url": {
                         "type": "null"
@@ -17624,7 +18658,9 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -17633,7 +18669,12 @@
                                 "type": "string"
                             },
                             "country_id": {
-                                "type": "integer"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "country": {
                                 "type": [
@@ -17642,7 +18683,9 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "name": {
                                         "type": "string"
@@ -17673,9 +18716,11 @@
                             },
                             "location_id": {
                                 "type": [
-                                    "integer",
+                                    "string",
                                     "null"
-                                ]
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "location": {
                                 "type": [
@@ -17684,13 +18729,25 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "country_id": {
-                                        "type": "integer"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "city_id": {
-                                        "type": "integer"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "address": {
                                         "type": "string"
@@ -17736,7 +18793,9 @@
                         "type": "object",
                         "properties": {
                             "id": {
-                                "type": "integer"
+                                "type": "string",
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "name": {
                                 "type": "string"
@@ -17745,7 +18804,12 @@
                                 "type": "string"
                             },
                             "country_id": {
-                                "type": "integer"
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "country": {
                                 "type": [
@@ -17754,7 +18818,9 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "name": {
                                         "type": "string"
@@ -17785,9 +18851,11 @@
                             },
                             "location_id": {
                                 "type": [
-                                    "integer",
+                                    "string",
                                     "null"
-                                ]
+                                ],
+                                "format": "uuid",
+                                "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                             },
                             "location": {
                                 "type": [
@@ -17796,13 +18864,25 @@
                                 ],
                                 "properties": {
                                     "id": {
-                                        "type": "integer"
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "country_id": {
-                                        "type": "integer"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "city_id": {
-                                        "type": "integer"
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "uuid",
+                                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
                                     },
                                     "address": {
                                         "type": "string"

@@ -634,4 +634,51 @@ Les objets utilisent le contrat ServiceRequestResource existant : adresse precis
 <p><code>links.agenda</code> pointe vers l'agenda existant : le frontend ajoute les dates <code>from</code> et <code>to</code> pour le consulter. Aucune seconde liste de rendez-vous n'est creee dans ce tableau de bord.</p>
 <p>Les objets respectent ServiceRequestResource et les regles d'adresse existantes : le client voit sa propre adresse ; l'adresse privee de l'etablissement du prestataire reste masquee avant accord. Reponse privee sans cache partage, limite de 60 requetes par minute.</p>
 <p>Exemple : <code>GET /api/mboka-services/v1/client-dashboard?section=proposals_to_review&amp;per_page=15&amp;page=1</code>. Les actions (confirmer une proposition, confirmer la fin ou publier un avis) continuent d'utiliser les routes protegees existantes, qui revalident les droits et le statut au moment de l'action.</p>
+<h2>Prestataires favoris du client</h2>
+<p>Les favoris sont prives au client connecte. Toutes les routes exigent un token Sanctum, une inscription verifiee, le role client et un profil client actif. Un role administrateur supplementaire ne donne aucun acces aux favoris des autres clients. Aucune notification n'est envoyee au prestataire.</p>
+<table>
+<thead>
+<tr>
+<th>Methode</th>
+<th>Route (prefixe /api/mboka-services/v1)</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td>/favorite-providers</td>
+<td>Liste paginee des favoris encore visibles dans l'annuaire.</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/favorite-providers/{provider}</td>
+<td>Etat personnel <code>is_favorite</code> pour afficher le coeur dans l'application.</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>/favorite-providers/{provider}</td>
+<td>Enregistrer le prestataire, sans corps requis.</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>/favorite-providers/{provider}</td>
+<td>Retirer le prestataire, sans corps requis.</td>
+</tr>
+</tbody>
+</table>
+<p>La liste accepte <code>page</code> (minimum 1) et <code>per_page</code> (15 par defaut, maximum 50). <code>data.providers</code> reprend les fiches publiques avec services, tarifs, zone d'intervention et reputation, puis ajoute <code>favorited_at</code> et <code>profile_url</code>. <code>meta</code> contient current_page, last_page, total, per_page ; <code>links</code> contient first, last, prev, next et conserve les filtres.</p>
+<p>L'ordre est celui des derniers ajouts. Un PUT repete conserve la date et l'ordre du premier ajout. L'unicite du couple client/prestataire est garantie en base, y compris lors d'ajouts concurrents. Un retrait suivi d'un nouvel ajout cree une nouvelle date d'enregistrement.</p>
+<p>PUT exige une fiche publique accessible (profil actif, compte verifie et role prestataire), sinon 404. Un compte disposant des deux roles ne peut pas ajouter son propre profil (403). Les identifiants client_id, user_id et provider_id ne sont jamais acceptes dans le corps ou la query : le client vient de la session et le prestataire du chemin.</p>
+<p>GET etat, PUT et DELETE repondent 200 avec <code>data: {provider_id, is_favorite}</code>. L'etat consulte uniquement l'enregistrement personnel : un prestataire devenu invisible peut rester marque comme favori. Pour une fiche existante jamais enregistree, l'etat vaut false. DELETE est idempotent pour une fiche existante, meme masquee ou supprimee logiquement. Un UUID de fiche inexistant retourne 404.</p>
+<p>Une fiche qui perd sa visibilite publique est exclue de la liste et de son total sans effacer le choix du client ; elle reapparait si elle redevient visible. La suppression definitive du profil client ou prestataire supprime ses enregistrements par cascade. Les favoris n'autorisent jamais a voir une adresse privee ou un contact personnel. Ils ne reservent aucune prestation et ne garantissent pas la disponibilite actuelle : le client consulte la fiche et utilise les routes habituelles pour une nouvelle demande.</p>
+<p>Limite de 60 requetes/minute pour ces routes. Reponses privees, sans cache partage. Migration : <code>php artisan migrate</code>.</p>
+<h2>Identifiants publics UUID</h2>
+<p>Toutes les entites exposees par l'API utilisent des UUID publics. Les champs <code>id</code> et les references comme <code>provider_id</code>, <code>country_id</code>, <code>service_request_id</code>, <code>avatar_media_id</code> ou <code>requested_by</code> contiennent maintenant une chaine UUID (ou null si la reference est absente). Le nom des champs reste identique.</p>
+<p>En PostgreSQL, les cles primaires et etrangeres restent numeriques. Une colonne <code>uuid</code> unique et non nulle est ajoutee aux entites metier et aux tokens appareils. La migration attribue un UUID aux anciennes lignes, y compris supprimees logiquement, sans changer leurs ID ni relations. Les insertions de masse ont aussi une valeur UUID par defaut.</p>
+<p>Exemple : <code>GET /api/mboka-services/v1/providers/550e8400-e29b-41d4-a716-446655440000</code>. Un corps de demande fournit les UUID de service_id, provider_id et des country_id/city_id de l'adresse. Les identifiants numeriques ne sont plus acceptes dans les routes (404) ni dans les references de requete (422). Un UUID inconnu dans une route retourne 404. Cette regle inclut les routes d'etat et de retrait des favoris : leur idempotence s'applique a une fiche existante, meme masquee ou supprimee logiquement.</p>
+<p>Cette evolution du contrat de developpement exige de mettre a jour les clients React et React Native. Ne convertir aucun UUID en nombre. Les liens renvoyes par l'API contiennent des UUID ; la pagination reste numerique (page, per_page, total). Les montants, notes, distances, revisions et tailles ne changent pas.</p>
+<p>Messagerie : <code>after_id</code> et <code>last_message_id</code> attendent un UUID de message. Pour le premier chargement, omettre after_id ; les marqueurs de lecture absents valent null. Les canaux Reverb deviennent <code>private-conversations.{uuid_conversation}</code> et <code>private-notifications.{uuid_utilisateur}</code>. Les evenements et les donnees Expo Push renvoient aussi des UUID.</p>
+<p>Les notifications, messages systeme, historiques geographiques et travaux en file conservent leurs references internes numeriques en base. Leur conversion est faite a la sortie HTTP, Reverb ou Expo, ce qui preserve les verifications d'acces et la compatibilite des historiques existants. Les identifiants deja en UUID (notifications, verification OTP, installation mobile, navigateur) restent inchanges. Les tokens Bearer Sanctum sont des credentials opaques : leur format ne doit pas etre interprete par le frontend.</p>
+<p>Les autorisations restent obligatoires : connaitre un UUID ne donne aucun acces aux donnees d'un autre compte. Les UUID publics generes ne doivent pas etre modifies. Executer <code>php artisan migrate</code> avant de demarrer cette version ; redemarrer les workers et Reverb apres deploiement afin de charger le nouveau contrat.</p>
 </main></body></html>
