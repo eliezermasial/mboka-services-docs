@@ -12342,7 +12342,7 @@
         "/service-requests/{service_request}/cancel": {
             "patch": {
                 "operationId": "v1.service-requests.cancel",
-                "summary": "Annule une demande",
+                "summary": "Annuler avant demarrage, avec motif obligatoire pour le prestataire",
                 "tags": [
                     "ServiceRequest"
                 ],
@@ -12371,6 +12371,7 @@
                     }
                 ],
                 "requestBody": {
+                    "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -12381,26 +12382,71 @@
                                             "string",
                                             "null"
                                         ],
-                                        "maxLength": 3000
+                                        "maxLength": 3000,
+                                        "description": "Obligatoire et non vide pour le prestataire ; facultatif pour le client."
                                     }
-                                }
+                                },
+                                "required": []
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "`ServiceRequestResponseResource`",
+                        "description": "Annulation et audit enregistres.",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ServiceRequestResponseResource"
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "service_request": {
+                                                    "$ref": "#/components/schemas/ServiceRequestResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "service_request"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
                                 }
                             }
                         }
                     },
                     "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
+                        "description": "Compte non autorise par la politique du dossier.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
@@ -12430,13 +12476,37 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "Dossier inexistant ou administrateur non participant.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
                     {
                         "bearerAuth": []
                     }
-                ]
+                ],
+                "description": "Client du dossier : pending/proposed/accepted, reason facultatif. Prestataire actuellement affecte : accepted uniquement, reason obligatoire non vide (3000 caracteres maximum). Avant accord, le prestataire utilise /reject. Aucun de ces participants ne peut annuler in_progress/awaiting_confirmation/disputed/completed par ce raccourci. Administrateur non participant interdit : la resolution des litiges conserve son parcours distinct. Historique avec auteur, role, instant UTC et motif ; prix conserve. Retire les rappels futurs et les reports en attente, masque de nouveau les adresses exactes a l autre partie et ferme la conversation en ecriture. Notification de l autre participant uniquement, sans motif dans le push ou l e-mail externe. Verrou SQL et transaction communs au demarrage/report : une repetition retourne 422 sans remplacer l auteur ni renvoyer la notification."
             }
         },
         "/notification-presence": {
@@ -15699,6 +15769,56 @@
                             "null"
                         ]
                     },
+                    "cancellation": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "by_user_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
+                                    },
+                                    "by_role": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "enum": [
+                                            "client",
+                                            "provider",
+                                            "admin",
+                                            null
+                                        ]
+                                    },
+                                    "at": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "format": "date-time"
+                                    },
+                                    "reason": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "by_user_id",
+                                    "by_role",
+                                    "at",
+                                    "reason"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Audit de l annulation. null pour un dossier non annule. Pour les anciennes annulations, auteur/role/date restent null plutot que d etre inventes."
+                    },
                     "client": {
                         "type": [
                             "object",
@@ -15936,6 +16056,7 @@
                     "completion",
                     "open_issue",
                     "cancellation_reason",
+                    "cancellation",
                     "client",
                     "provider",
                     "service",
