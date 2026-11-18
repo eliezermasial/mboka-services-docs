@@ -7792,6 +7792,341 @@
                 ]
             }
         },
+        "/notification-preferences": {
+            "get": {
+                "operationId": "v1.notification-preferences.show",
+                "tags": [
+                    "NotificationPreference"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Preferences personnelles durables.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "preferences": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "channels": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "email": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "mobile_push": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "web_push": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "email",
+                                                                "mobile_push",
+                                                                "web_push"
+                                                            ]
+                                                        },
+                                                        "categories": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "messages": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "proposals": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "appointments": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "interventions": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "other": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "messages",
+                                                                "proposals",
+                                                                "appointments",
+                                                                "interventions",
+                                                                "other"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "channels",
+                                                        "categories"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "preferences"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Compte verifie. PostgreSQL, sans cache Redis. Tous canaux et categories actifs par defaut. Historique et Reverb conserves ; OTP et securite independants. Reverification avant envoi. PATCH partiel, cles inconnues refusees. Reponse private, no-store."
+            },
+            "patch": {
+                "operationId": "v1.notification-preferences.update",
+                "tags": [
+                    "NotificationPreference"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateNotificationPreferencesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Preferences personnelles durables.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "preferences": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "channels": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "email": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "mobile_push": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "web_push": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "email",
+                                                                "mobile_push",
+                                                                "web_push"
+                                                            ]
+                                                        },
+                                                        "categories": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "messages": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "proposals": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "appointments": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "interventions": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                },
+                                                                "other": {
+                                                                    "type": "boolean",
+                                                                    "default": true
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "messages",
+                                                                "proposals",
+                                                                "appointments",
+                                                                "interventions",
+                                                                "other"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "channels",
+                                                        "categories"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "preferences"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "503": {
+                        "description": "Stockage Redis indisponible, uniquement si Redis est active pour cette operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Maximum 30 modifications par minute.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "const": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "X-Locale",
+                        "in": "header",
+                        "required": false,
+                        "description": "Langue des messages.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "fr",
+                                "en",
+                                "ln"
+                            ]
+                        }
+                    }
+                ],
+                "description": "Compte verifie. PostgreSQL, sans cache Redis. Tous canaux et categories actifs par defaut. Historique et Reverb conserves ; OTP et securite independants. Reverification avant envoi. PATCH partiel, cles inconnues refusees. Reponse private, no-store."
+            }
+        },
         "/auth/profile": {
             "get": {
                 "operationId": "v1.auth.profile.show",
@@ -18379,6 +18714,51 @@
                     "media_type"
                 ],
                 "title": "UpdateMediaRequest"
+            },
+            "UpdateNotificationPreferencesRequest": {
+                "type": "object",
+                "properties": {
+                    "channels": {
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": "boolean"
+                            },
+                            "mobile_push": {
+                                "type": "boolean"
+                            },
+                            "web_push": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "categories": {
+                        "type": "object",
+                        "properties": {
+                            "messages": {
+                                "type": "boolean"
+                            },
+                            "proposals": {
+                                "type": "boolean"
+                            },
+                            "appointments": {
+                                "type": "boolean"
+                            },
+                            "interventions": {
+                                "type": "boolean"
+                            },
+                            "other": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Identifiant public UUID. Les cles numeriques restent internes a PostgreSQL."
+                    }
+                },
+                "title": "UpdateNotificationPreferencesRequest"
             },
             "UpdateProfileRequest": {
                 "type": "object",
